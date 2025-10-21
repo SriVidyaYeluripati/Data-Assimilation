@@ -474,7 +474,7 @@ $$
 \|\hat{\beta}_S\|_\infty \le \|(X_S^T X_S)^{-1}\|_2 \, \|X_S^T y\|_2
 $$
 
-> “This bounds how large any single coefficient can be, depending on matrix conditioning.”
+> “This inequality bounds how big any single coefficient can get, based on the length of y and the stability of the inverse matrix.”
 
 ---
 
@@ -483,7 +483,7 @@ $$
 $$
 \|(X_S^T X_S)^{-1}\|_2 = 1 / \lambda_{\min}(X_S^T X_S) \le 1 / \eta_k
 $$
-
+> Since the smallest eigenvalue of the Gram matrix controls its conditioning, small ηₖ means big inverse — unstable estimates.
 ---
 
 **Step 4: Bound the right-hand term**
@@ -491,7 +491,7 @@ $$
 $$
 \|X_S^T y\|_2 \le \sqrt{k}\|y\|_2
 $$
-
+>“This holds because we have at most k active features — a simple geometric inequality.”
 ---
 
 **Step 5: Combine**
@@ -501,6 +501,7 @@ $$
 $$
 
 > “The largest coefficient is bounded by $\|y\|_2$ scaled by $1/\sqrt{\eta_k}$ — poor conditioning ($\eta_k$ small) makes coefficients explode.”
+> That’s the ℓ∞ bound — it says the largest single coefficient is bounded by the inverse square root of ηₖ times the size of the data vector y.”
 
 ---
 
