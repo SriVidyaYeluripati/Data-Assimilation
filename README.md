@@ -91,33 +91,7 @@ Ensure you point to `Documents/DA/lorenz63_project_final/` (or your preferred fo
 * Avoid **data leakage**: careful train/validation/test split, no sharing of information across splits.
 * Serve as a robust base for a potential master’s thesis or for collaboration (e.g., with the Deutscher Wetterdienst).
 
-## 🧩 How to Extend / Contribute
 
-* Add new architectures (e.g., Transformer‐based encoder) by extending `src/models.py` and integrating in `trainer.py`.
-* Add new observation operators (e.g., quadratic, cross‐term, partial observations) by modifying `dataset.py`.
-* Add new loss functions or training regimes (e.g., weighted MSE, adversarial loss, time‐weighted loss).
-* Add more extensive diagnostics (e.g., animate the assimilation process, compute metrics like RMSE over time or over ensemble).
-* Add test harnesses to ensure no data leakage in new variants.
-* Add configuration files (e.g., YAML/JSON) to ease experiment tracking and reproducibility.
-
-## ✅ Expected Output
-
-* For each experiment variant you should end up with:
-
-  * Model weights and logs saved in the `results/…` folder.
-  * Plots including: truth vs background vs analysed trajectory, error curves over time, comparative error summary across architecture/obs modes.
-  * If enabled: animation of the trajectory and assimilation correction over time.
-  * A summary report (e.g., in `results/…/summary.txt` or notebook) comparing architectures and observation modes.
-
-## 🎯 Use Case for My Project (Shri)
-
-Since you (Shri) are preparing a structured report comparing MLP, GRU and LSTM for the Lorenz‐63 assimilation project (in collaboration with Hans), this repository is tailored for your workflow:
-
-* It supports your setup of switching observation operators (`X`, `X&Y`, `X²`).
-* It supports the fixed‐point assimilation formulation (i.e., encoder outputs delta correction) that you discussed.
-* It supports saving of models, images, side-by-side panels, for your later exploration and discovery.
-* It provides a clean baseline to ensure you’re not mixing data sets or leaking information.
-* You can use it directly as the “final version” under `Documents/DA/lorenz63_project_final/` and deliver to the German Weather Service or in your thesis.
 
 
 
