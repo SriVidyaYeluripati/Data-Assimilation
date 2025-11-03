@@ -1,4 +1,3 @@
-# src/models/models.py
 import torch
 import torch.nn as nn
 import os, sys
@@ -78,4 +77,28 @@ class LSTMModel(nn.Module):
         return x_b + dx
 
 
-__all__ = ["MLPModel", "GRUModel", "LSTMModel"]
+class BaselineMLP(nn.Module):
+    """
+    Baseline no-mean model:
+      Direct mapping from observations to state.
+      input: y_last (only the most recent observation)
+      output: x_a (estimated state)
+    
+    Note: This model does NOT use background state (x_b) and predicts
+          the state directly from observations without residual formulation.
+    """
+    def __init__(self, x_dim: int = 3, y_dim: int = 1, hidden: int = 32):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(y_dim, hidden),
+            nn.Tanh(),
+            nn.Linear(hidden, x_dim),
+        )
+
+    def forward(self, y_seq: torch.Tensor) -> torch.Tensor:
+        # y_seq: [B, L, y_dim]  -> use only the last observation
+        y_last = y_seq[:, -1, :]  # [B, y_dim]
+        return self.net(y_last)
+
+
+__all__ = ["MLPModel", "GRUModel", "LSTMModel", "BaselineMLP"]
