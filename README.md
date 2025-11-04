@@ -16,7 +16,7 @@ Key features:
 * Full experiment orchestrator: model training, evaluation, diagnostics, saving of model artefacts and visualisation panels (side-by‐side reconstructions, error plots, failure cases) to a well-organised folder structure (e.g., `Documents/DA/lorenz63_project_final/`).
 * Focus on avoiding data leakage and ensuring fair comparisons across architectures.
 
-## 📁 Repository structure
+##  Repository structure
 
 ```
 data/
@@ -33,7 +33,7 @@ src/
 README.md              # this file  
 ```
 
-## 🧪 Getting Started
+##  Getting Started
 
 ### Requirements
 
@@ -83,7 +83,7 @@ pip install -r requirements.txt
 The orchestrator is designed to **overwrite** existing outputs if rerun (for reproducibility and avoiding stale artefacts). For example, running the same experiment variant will overwrite `results/model_obsVariant/` with fresh output.
 Ensure you point to `Documents/DA/lorenz63_project_final/` (or your preferred folder) for final artefacts.
 
-## 🔍 Project Goals & Scope
+##  Project Goals & Scope
 
 * Provide a **structured and reproducible** experiment pipeline for data assimilation using neural networks.
 * Compare architectures (MLP, GRU, LSTM) under **identical experimental conditions** (same data, same loss functions, same observation operators).
