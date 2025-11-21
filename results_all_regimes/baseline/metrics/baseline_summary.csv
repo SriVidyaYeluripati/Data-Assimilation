@@ -1,0 +1,13 @@
+mode,sigma,model,rmse
+x,0.05,baseline_no_mean,16.158419052064705
+x,0.1,baseline_no_mean,16.125416620550777
+x,0.5,baseline_no_mean,16.414402430071036
+x,1.0,baseline_no_mean,16.287019675137383
+xy,0.05,baseline_no_mean,16.257831349122323
+xy,0.1,baseline_no_mean,16.222967015543993
+xy,0.5,baseline_no_mean,15.985504644696665
+xy,1.0,baseline_no_mean,16.281124916859056
+x2,0.05,baseline_no_mean,15.833298378393783
+x2,0.1,baseline_no_mean,15.772111453222138
+x2,0.5,baseline_no_mean,15.537665096642707
+x2,1.0,baseline_no_mean,15.866923723220442
