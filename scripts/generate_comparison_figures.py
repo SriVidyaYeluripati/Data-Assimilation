@@ -154,7 +154,6 @@ def parse_csv_metrics(filepath):
                     'rmse_b': float(rmse_b) if not np.isnan(rmse_b) else np.nan,
                     'rmse_a': float(rmse_a) if not np.isnan(rmse_a) else np.nan,
                     'improvement_bg': float(improv_pct / 100) if not np.isnan(improv_pct) else np.nan,
-                    'hausdorff': np.nan,  # Not available in current data
                     'diverged': diverged
                 }
                 records.append(record)
@@ -212,7 +211,7 @@ def aggregate_metrics(df):
         }
         
         # Add statistics for each metric
-        for metric in ['rmse_b', 'rmse_a', 'improvement_bg', 'hausdorff']:
+        for metric in ['rmse_b', 'rmse_a', 'improvement_bg']:
             if metric in group.columns:
                 values = group[metric].dropna()
                 if len(values) > 0:
