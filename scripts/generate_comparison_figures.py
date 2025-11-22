@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Generate publication-quality comparison plots for Lorenz-63 data assimilation experiments.
+Generate 6 publication-quality comparison plots for Lorenz-63 data assimilation experiments.
 
 This script:
 1. Recursively reads all metric files under results/**/metrics/*.{json,csv}
 2. Normalizes each metric entry to a unified dataframe
 3. Aggregates metrics by (regime, architecture, mode, sigma_obs)
 4. Saves aggregated table to Report/figs/aggregated_metrics_summary.csv
-5. Generates 5 high-resolution PNG figures with consistent styling:
-   - 2 global comparison figures (Section 4.2): RMSE and Improvement across modes
-   - 3 mode-specific figures (Section 4.3): X, XY, and X² summaries
-
-Note: Hausdorff distance plots are omitted as this metric is not available in the data.
+5. Generates 6 high-resolution PNG figures with consistent styling:
+   - 3 global comparison figures (Section 4.2): RMSE, Improvement, and Hausdorff across modes
+   - 3 mode-specific figures (Section 4.3): X, XY, and X² summaries (each with 3 panels)
 """
 
 import os
@@ -154,6 +152,7 @@ def parse_csv_metrics(filepath):
                     'rmse_b': float(rmse_b) if not np.isnan(rmse_b) else np.nan,
                     'rmse_a': float(rmse_a) if not np.isnan(rmse_a) else np.nan,
                     'improvement_bg': float(improv_pct / 100) if not np.isnan(improv_pct) else np.nan,
+                    'hausdorff': np.nan,  # Not available in current data - placeholder for future
                     'diverged': diverged
                 }
                 records.append(record)
@@ -211,7 +210,7 @@ def aggregate_metrics(df):
         }
         
         # Add statistics for each metric
-        for metric in ['rmse_b', 'rmse_a', 'improvement_bg']:
+        for metric in ['rmse_b', 'rmse_a', 'improvement_bg', 'hausdorff']:
             if metric in group.columns:
                 values = group[metric].dropna()
                 if len(values) > 0:
@@ -240,7 +239,7 @@ def aggregate_metrics(df):
 
 
 def plot_core_figures(agg_df, output_dir):
-    """Generate 2 global comparison figures (Section 4.2)."""
+    """Generate 3 global comparison figures (Section 4.2)."""
     
     modes = ['x', 'xy', 'x2']
     mode_labels = {'x': 'X', 'xy': 'XY', 'x2': 'X²'}
@@ -252,6 +251,10 @@ def plot_core_figures(agg_df, output_dir):
     # Figure 2: Improvement by mode
     fig2, axes2 = plt.subplots(1, 3, figsize=(15, 4))
     fig2.suptitle('Improvement by Observation Mode', fontsize=14, y=1.02)
+    
+    # Figure 3: Hausdorff by mode
+    fig3, axes3 = plt.subplots(1, 3, figsize=(15, 4))
+    fig3.suptitle('Hausdorff Distance by Observation Mode', fontsize=14, y=1.02)
     
     # Determine y-limits across all panels for consistency
     rmse_min, rmse_max = np.inf, -np.inf
@@ -279,6 +282,7 @@ def plot_core_figures(agg_df, output_dir):
     for mode_idx, mode in enumerate(modes):
         ax1 = axes1[mode_idx]
         ax2 = axes2[mode_idx]
+        ax3 = axes3[mode_idx]
         
         mode_data = agg_df[agg_df['mode'] == mode]
         
@@ -321,6 +325,22 @@ def plot_core_figures(agg_df, output_dir):
                             marker='o', label=label, alpha=0.8)
                     ax2.fill_between(sigmas, improv_mean - improv_std, improv_mean + improv_std,
                                     color=color, alpha=0.15)
+                
+                # Hausdorff plot
+                if 'hausdorff_mean' in subset.columns:
+                    haus_mean = subset['hausdorff_mean'].values
+                    haus_std = subset['hausdorff_std'].values
+                    
+                    # Only plot if we have non-NaN data
+                    if not np.all(np.isnan(haus_mean)):
+                        label = f'{arch}-{regime.capitalize()}'
+                        color = ARCH_COLORS[arch]
+                        style = REGIME_STYLES[regime]
+                        
+                        ax3.plot(sigmas, haus_mean, color=color, linestyle=style,
+                                marker='o', label=label, alpha=0.8)
+                        ax3.fill_between(sigmas, haus_mean - haus_std, haus_mean + haus_std,
+                                        color=color, alpha=0.15)
         
         # Configure axes
         ax1.set_xlabel('σ_obs')
@@ -335,6 +355,20 @@ def plot_core_figures(agg_df, output_dir):
         ax2.set_ylim(improv_min * 100, improv_max * 100)
         ax2.axhline(y=0, color='k', linestyle='--', alpha=0.3, linewidth=1)
         ax2.grid(True, alpha=0.3)
+        
+        ax3.set_xlabel('σ_obs')
+        ax3.set_ylabel('Hausdorff Distance')
+        ax3.set_title(f'Mode: {mode_labels[mode]}')
+        ax3.grid(True, alpha=0.3)
+        # Check if we have any Hausdorff data
+        has_hausdorff_data = False
+        if 'hausdorff_mean' in agg_df.columns:
+            mode_hausdorff = agg_df[agg_df['mode'] == mode]['hausdorff_mean']
+            has_hausdorff_data = mode_hausdorff.notna().any()
+        if not has_hausdorff_data:
+            ax3.text(0.5, 0.5, 'Data not yet available\n(Placeholder for future metric)', 
+                    ha='center', va='center', transform=ax3.transAxes, 
+                    fontsize=10, alpha=0.5, style='italic')
     
     # Add legend outside panels
     handles, labels = axes1[0].get_legend_handles_labels()
@@ -343,6 +377,11 @@ def plot_core_figures(agg_df, output_dir):
                    ncol=min(len(handles), 5), frameon=True, fancybox=True)
         fig2.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.02),
                    ncol=min(len(handles), 5), frameon=True, fancybox=True)
+        # Only add legend to fig3 if there's data
+        handles3, labels3 = axes3[0].get_legend_handles_labels()
+        if handles3:
+            fig3.legend(handles3, labels3, loc='upper center', bbox_to_anchor=(0.5, -0.02),
+                       ncol=min(len(handles3), 5), frameon=True, fancybox=True)
     
     plt.figure(fig1.number)
     plt.tight_layout()
@@ -354,8 +393,14 @@ def plot_core_figures(agg_df, output_dir):
     plt.savefig(os.path.join(output_dir, 'core_improvement_by_mode.png'), dpi=300, bbox_inches='tight')
     plt.close(fig2)
     
+    plt.figure(fig3.number)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'core_hausdorff_by_mode.png'), dpi=300, bbox_inches='tight')
+    plt.close(fig3)
+    
     print(f"✓ Generated core_rmse_by_mode.png")
     print(f"✓ Generated core_improvement_by_mode.png")
+    print(f"✓ Generated core_hausdorff_by_mode.png")
 
 
 def plot_mode_specific_figures(agg_df, output_dir):
@@ -365,7 +410,7 @@ def plot_mode_specific_figures(agg_df, output_dir):
     mode_labels = {'x': 'X', 'xy': 'XY', 'x2': 'X²'}
     
     for mode in modes:
-        fig, axes = plt.subplots(2, 1, figsize=(10, 8))
+        fig, axes = plt.subplots(3, 1, figsize=(10, 12))
         fig.suptitle(f'Mode {mode_labels[mode]} Summary', fontsize=14, y=0.995)
         
         mode_data = agg_df[agg_df['mode'] == mode]
@@ -374,6 +419,8 @@ def plot_mode_specific_figures(agg_df, output_dir):
         ax0 = axes[0]
         # Panel 2: Improvement vs σ_obs
         ax1 = axes[1]
+        # Panel 3: Hausdorff vs σ_obs
+        ax2 = axes[2]
         
         for arch in ['MLP', 'GRU', 'LSTM']:
             for regime in ['baseline', 'fixedmean', 'resample']:
@@ -409,6 +456,18 @@ def plot_mode_specific_figures(agg_df, output_dir):
                             marker='o', label=label, alpha=0.8)
                     ax1.fill_between(sigmas, improv_mean - improv_std, improv_mean + improv_std,
                                     color=color, alpha=0.15)
+                
+                # Hausdorff panel
+                if 'hausdorff_mean' in subset.columns:
+                    haus_mean = subset['hausdorff_mean'].values
+                    haus_std = subset['hausdorff_std'].values
+                    
+                    # Only plot if we have non-NaN data
+                    if not np.all(np.isnan(haus_mean)):
+                        ax2.plot(sigmas, haus_mean, color=color, linestyle=style,
+                                marker='o', label=label, alpha=0.8)
+                        ax2.fill_between(sigmas, haus_mean - haus_std, haus_mean + haus_std,
+                                        color=color, alpha=0.15)
         
         # Configure axes
         ax0.set_xlabel('σ_obs')
@@ -423,6 +482,21 @@ def plot_mode_specific_figures(agg_df, output_dir):
         ax1.axhline(y=0, color='k', linestyle='--', alpha=0.3, linewidth=1)
         ax1.grid(True, alpha=0.3)
         ax1.legend(loc='best', fontsize=8)
+        
+        ax2.set_xlabel('σ_obs')
+        ax2.set_ylabel('Hausdorff Distance')
+        ax2.set_title('Hausdorff Distance')
+        ax2.grid(True, alpha=0.3)
+        # Check if we have any Hausdorff data for this mode
+        has_hausdorff_data = False
+        if 'hausdorff_mean' in mode_data.columns:
+            has_hausdorff_data = mode_data['hausdorff_mean'].notna().any()
+        if has_hausdorff_data:
+            ax2.legend(loc='best', fontsize=8)
+        else:
+            ax2.text(0.5, 0.5, 'Data not yet available\n(Placeholder for future metric)', 
+                    ha='center', va='center', transform=ax2.transAxes, 
+                    fontsize=10, alpha=0.5, style='italic')
         
         plt.tight_layout()
         output_file = os.path.join(output_dir, f'mode_{mode}_summary.png')
@@ -503,11 +577,12 @@ def main():
     print("  1. aggregated_metrics_summary.csv")
     print("  2. core_rmse_by_mode.png")
     print("  3. core_improvement_by_mode.png")
-    print("  4. mode_x_summary.png")
-    print("  5. mode_xy_summary.png")
-    print("  6. mode_x2_summary.png")
+    print("  4. core_hausdorff_by_mode.png")
+    print("  5. mode_x_summary.png")
+    print("  6. mode_xy_summary.png")
+    print("  7. mode_x2_summary.png")
     print()
-    print("Note: Hausdorff distance plots omitted (data not available in metrics)")
+    print("Note: Hausdorff distance panels show placeholder text (data not yet available)")
     print()
     
     return 0

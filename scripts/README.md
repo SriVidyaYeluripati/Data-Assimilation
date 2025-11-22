@@ -4,7 +4,7 @@ This directory contains utility scripts for the Data Assimilation project.
 
 ## generate_comparison_figures.py
 
-Generates publication-quality comparison plots for Lorenz-63 data assimilation experiments.
+Generates 6 publication-quality comparison plots for Lorenz-63 data assimilation experiments.
 
 ### Usage
 
@@ -28,16 +28,17 @@ python scripts/generate_comparison_figures.py
 3. **Saves aggregated table** to:
    - `Report/figs/aggregated_metrics_summary.csv`
 
-4. **Generates 5 PNG figures**:
+4. **Generates 6 PNG figures**:
 
    **Global comparison figures (Section 4.2):**
    - `core_rmse_by_mode.png` - RMSE vs σ_obs for each mode (3 panels)
    - `core_improvement_by_mode.png` - Improvement vs σ_obs for each mode (3 panels)
+   - `core_hausdorff_by_mode.png` - Hausdorff distance vs σ_obs (3 panels)
 
    **Mode-specific figures (Section 4.3):**
-   - `mode_x_summary.png` - Summary for observation mode X (2 stacked panels)
-   - `mode_xy_summary.png` - Summary for observation mode XY (2 stacked panels)
-   - `mode_x2_summary.png` - Summary for observation mode X² (2 stacked panels)
+   - `mode_x_summary.png` - Summary for observation mode X (3 stacked panels)
+   - `mode_xy_summary.png` - Summary for observation mode XY (3 stacked panels)
+   - `mode_x2_summary.png` - Summary for observation mode X² (3 stacked panels)
 
 ### Output
 
@@ -47,7 +48,7 @@ All figures are saved to `Report/figs/` with:
 - Mean ± standard deviation ribbons
 - Clear legends and axis labels
 
-**Note:** Hausdorff distance plots are not generated as this metric is not available in the source data files.
+**Note:** Hausdorff distance is currently a placeholder (data not yet available in source files). The panels display placeholder text indicating this is a future metric.
 
 ### Requirements
 
