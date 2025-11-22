@@ -2,14 +2,11 @@
 """
 Generate 6 publication-quality comparison plots for Lorenz-63 data assimilation experiments.
 
-This script:
-1. Recursively reads all metric files under results/**/metrics/*.{json,csv}
-2. Normalizes each metric entry to a unified dataframe
-3. Aggregates metrics by (regime, architecture, mode, sigma_obs)
-4. Saves aggregated table to Report/figs/aggregated_metrics_summary.csv
-5. Generates 6 high-resolution PNG figures with consistent styling:
-   - 3 global comparison figures (Section 4.2): RMSE, Improvement, and Hausdorff across modes
-   - 3 mode-specific figures (Section 4.3): X, XY, and X² summaries (each with 3 panels)
+This script loads all experiment metrics, aggregates them using formulas defined in the
+scientific report, and generates six publication-quality PNG figures for Section 4.
+
+Author: GitHub Copilot
+Date: 2025-11-22
 """
 
 import os
@@ -26,6 +23,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 
+# Set random seed for deterministic behavior
+np.random.seed(42)
+
 # Configure matplotlib for publication quality
 plt.rcParams.update({
     'font.size': 11,
@@ -40,30 +40,41 @@ plt.rcParams.update({
     'savefig.bbox': 'tight',
     'axes.grid': True,
     'grid.alpha': 0.3,
-    'lines.linewidth': 2,
-    'lines.markersize': 6
+    'grid.linestyle': '--',
+    'grid.linewidth': 0.5,
+    'lines.linewidth': 2.5,
+    'lines.markersize': 7
 })
 
-# Color scheme for architectures
+# STRICT COLOR & STYLE CONVENTIONS
+# Architectures (consistent across all 6 plots)
 ARCH_COLORS = {
-    'MLP': '#1f77b4',
-    'GRU': '#ff7f0e', 
-    'LSTM': '#2ca02c'
+    'MLP': 'blue',      # Blue
+    'GRU': 'green',     # Green
+    'LSTM': 'red'       # Red
 }
 
-# Line styles for regimes
+# Regime linestyles
 REGIME_STYLES = {
-    'baseline': '-',
-    'fixedmean': '--',
-    'resample': ':'
+    'baseline': ':',     # Dotted
+    'fixedmean': '--',   # Dashed
+    'resample': '-'      # Solid
 }
 
-# Small epsilon for numerical stability in calculations
+# Small epsilon for numerical stability
 EPSILON = 1e-8
 
 
 def extract_info_from_path(filepath):
-    """Extract regime, architecture, mode, and sigma from file path."""
+    """
+    Extract regime, architecture, mode, and sigma from file path.
+    
+    Args:
+        filepath: Path to the metric file
+        
+    Returns:
+        dict with regime info or None if not identifiable
+    """
     path = str(filepath)
     
     # Extract regime from path
@@ -79,7 +90,19 @@ def extract_info_from_path(filepath):
 
 
 def parse_csv_metrics(filepath):
-    """Parse CSV metric files and return list of records."""
+    """
+    Parse CSV metric files and return list of normalized records.
+    
+    Each record contains:
+        regime, architecture, mode, sigma_obs, seed,
+        rmse_b, rmse_a, improvement_bg, hausdorff, diverged
+    
+    Args:
+        filepath: Path to CSV file
+        
+    Returns:
+        List of dictionaries, each representing one metric record
+    """
     try:
         df = pd.read_csv(filepath)
         records = []
@@ -105,14 +128,14 @@ def parse_csv_metrics(filepath):
                     mode = mode_raw
                 
                 # Normalize architecture
-                if 'mlp' in model_raw:
+                if 'mlp' in model_raw or model_raw == 'baseline_no_mean':
                     architecture = 'MLP'
                 elif 'gru' in model_raw:
                     architecture = 'GRU'
                 elif 'lstm' in model_raw:
                     architecture = 'LSTM'
                 else:
-                    architecture = model_raw.upper()
+                    continue  # Skip unknown architectures
                 
                 # Get sigma
                 try:
@@ -124,35 +147,36 @@ def parse_csv_metrics(filepath):
                 rmse_b = row.get('rmse_b', row.get('mean_rmse_b', np.nan))
                 rmse_a = row.get('rmse_a', row.get('mean_rmse_a', np.nan))
                 
-                # Calculate improvement if not present
-                if 'improv_pct' in row:
-                    improv_pct = row['improv_pct']
-                elif 'improvement_pct' in row:
-                    improv_pct = row['improvement_pct']
+                # Calculate improvement_bg using EXACT formula from report
+                # Improvement_bg = (RMSE_before - RMSE_after) / (RMSE_before + 1e-8)
+                if not np.isnan(rmse_b) and not np.isnan(rmse_a):
+                    improvement_bg = (rmse_b - rmse_a) / (rmse_b + EPSILON)
                 else:
-                    # Calculate as (rmse_b - rmse_a) / (rmse_b + epsilon) * 100
-                    if not np.isnan(rmse_b) and not np.isnan(rmse_a):
-                        improvement_bg = (rmse_b - rmse_a) / (rmse_b + EPSILON)
-                        improv_pct = improvement_bg * 100
-                    else:
-                        improv_pct = np.nan
+                    improvement_bg = np.nan
                 
-                # Check for divergence (very high RMSE or negative improvement)
+                # Get hausdorff if available (normalized)
+                hausdorff = row.get('hausdorff', row.get('hausdorff_norm', np.nan))
+                
+                # Check for divergence
+                # Divergence rule: flagged if rmse_a is very high or improvement is very negative
                 diverged = 0
                 if not np.isnan(rmse_a):
-                    if rmse_a > 1e6 or (not np.isnan(improv_pct) and improv_pct < -100):
+                    if rmse_a > 1e6 or (not np.isnan(improvement_bg) and improvement_bg < -1.0):
                         diverged = 1
+                
+                # Seed (not available in current data, use 0 as placeholder)
+                seed = row.get('seed', 0)
                 
                 record = {
                     'regime': regime,
                     'architecture': architecture,
                     'mode': mode,
                     'sigma_obs': sigma,
-                    'seed': 0,  # Not available in current data
+                    'seed': seed,
                     'rmse_b': float(rmse_b) if not np.isnan(rmse_b) else np.nan,
                     'rmse_a': float(rmse_a) if not np.isnan(rmse_a) else np.nan,
-                    'improvement_bg': float(improv_pct / 100) if not np.isnan(improv_pct) else np.nan,
-                    'hausdorff': np.nan,  # Not available in current data - placeholder for future
+                    'improvement_bg': float(improvement_bg) if not np.isnan(improvement_bg) else np.nan,
+                    'hausdorff': float(hausdorff) if not np.isnan(hausdorff) else np.nan,
                     'diverged': diverged
                 }
                 records.append(record)
@@ -164,8 +188,17 @@ def parse_csv_metrics(filepath):
 
 
 def collect_all_metrics(results_dirs):
-    """Recursively collect all metrics from specified directories."""
+    """
+    Recursively collect all metrics from specified directories.
+    
+    Args:
+        results_dirs: List of directories to search
+        
+    Returns:
+        pandas DataFrame with all metrics
+    """
     all_records = []
+    file_count = 0
     
     for results_dir in results_dirs:
         if not os.path.exists(results_dir):
@@ -177,16 +210,36 @@ def collect_all_metrics(results_dirs):
         for csv_file in csv_files:
             records = parse_csv_metrics(csv_file)
             all_records.extend(records)
+            if records:
+                file_count += 1
     
+    print(f"  Parsed {file_count} metric files")
     return pd.DataFrame(all_records)
 
 
 def aggregate_metrics(df):
-    """Aggregate metrics by (regime, architecture, mode, sigma_obs)."""
+    """
+    Aggregate metrics by (regime, architecture, mode, sigma_obs).
+    
+    Computes:
+        - mean, std of rmse_a
+        - median, IQR of rmse_a
+        - mean, std of improvement_bg
+        - median, IQR of improvement_bg
+        - mean, std of hausdorff
+        - median, IQR of hausdorff
+        - divergence_rate = mean(diverged)
+    
+    Args:
+        df: DataFrame with individual metric records
+        
+    Returns:
+        DataFrame with aggregated statistics
+    """
     if df.empty:
         return pd.DataFrame()
     
-    # Remove diverged cases for aggregation statistics
+    # Remove diverged cases for aggregation statistics (but count them for divergence rate)
     df_valid = df[df['diverged'] == 0].copy()
     
     # Group by key dimensions
@@ -196,21 +249,24 @@ def aggregate_metrics(df):
     for name, group in df.groupby(group_cols):
         regime, architecture, mode, sigma_obs = name
         
-        # Calculate statistics for each metric
+        # Get all cases (including diverged) for divergence rate
+        all_cases = df[(df['regime'] == regime) & 
+                      (df['architecture'] == architecture) & 
+                      (df['mode'] == mode) & 
+                      (df['sigma_obs'] == sigma_obs)]
+        
+        # Calculate statistics
         stats = {
             'regime': regime,
             'architecture': architecture,
             'mode': mode,
             'sigma_obs': sigma_obs,
             'n_samples': len(group),
-            'n_diverged': int((df[(df['regime'] == regime) & 
-                                  (df['architecture'] == architecture) & 
-                                  (df['mode'] == mode) & 
-                                  (df['sigma_obs'] == sigma_obs)]['diverged']).sum()),
+            'n_diverged': int(all_cases['diverged'].sum()),
         }
         
         # Add statistics for each metric
-        for metric in ['rmse_b', 'rmse_a', 'improvement_bg', 'hausdorff']:
+        for metric in ['rmse_a', 'improvement_bg', 'hausdorff']:
             if metric in group.columns:
                 values = group[metric].dropna()
                 if len(values) > 0:
@@ -227,42 +283,56 @@ def aggregate_metrics(df):
                     stats[f'{metric}_q75'] = np.nan
         
         # Divergence rate
-        total_in_group = len(df[(df['regime'] == regime) & 
-                                (df['architecture'] == architecture) & 
-                                (df['mode'] == mode) & 
-                                (df['sigma_obs'] == sigma_obs)])
+        total_in_group = len(all_cases)
         stats['divergence_rate'] = stats['n_diverged'] / total_in_group if total_in_group > 0 else 0
         
         agg_results.append(stats)
     
-    return pd.DataFrame(agg_results)
+    # Create DataFrame and sort by mode, architecture, regime, sigma
+    agg_df = pd.DataFrame(agg_results)
+    if not agg_df.empty:
+        # Sort: mode (X, XY, X²), then architecture, then regime, then sigma
+        mode_order = {'x': 0, 'xy': 1, 'x2': 2}
+        agg_df['mode_sort'] = agg_df['mode'].map(mode_order)
+        agg_df = agg_df.sort_values(['mode_sort', 'architecture', 'regime', 'sigma_obs'])
+        agg_df = agg_df.drop('mode_sort', axis=1)
+    
+    return agg_df
 
 
 def plot_core_figures(agg_df, output_dir):
-    """Generate 3 global comparison figures (Section 4.2)."""
+    """
+    Generate 3 global comparison figures (Section 4.2).
+    
+    Each figure is a 3-panel horizontal plot (X, XY, X²).
+    
+    Args:
+        agg_df: Aggregated metrics DataFrame
+        output_dir: Output directory for PNG files
+    """
     
     modes = ['x', 'xy', 'x2']
     mode_labels = {'x': 'X', 'xy': 'XY', 'x2': 'X²'}
     
     # Figure 1: RMSE by mode
-    fig1, axes1 = plt.subplots(1, 3, figsize=(15, 4))
-    fig1.suptitle('Post-Assimilation RMSE by Observation Mode', fontsize=14, y=1.02)
+    fig1, axes1 = plt.subplots(1, 3, figsize=(18, 6))
+    fig1.suptitle('Post-Assimilation RMSE by Observation Mode', fontsize=14, y=1.00)
     
     # Figure 2: Improvement by mode
-    fig2, axes2 = plt.subplots(1, 3, figsize=(15, 4))
-    fig2.suptitle('Improvement by Observation Mode', fontsize=14, y=1.02)
+    fig2, axes2 = plt.subplots(1, 3, figsize=(18, 6))
+    fig2.suptitle('Improvement by Observation Mode', fontsize=14, y=1.00)
     
     # Figure 3: Hausdorff by mode
-    fig3, axes3 = plt.subplots(1, 3, figsize=(15, 4))
-    fig3.suptitle('Hausdorff Distance by Observation Mode', fontsize=14, y=1.02)
+    fig3, axes3 = plt.subplots(1, 3, figsize=(18, 6))
+    fig3.suptitle('Hausdorff Distance by Observation Mode', fontsize=14, y=1.00)
     
     # Determine y-limits across all panels for consistency
     rmse_min, rmse_max = np.inf, -np.inf
     improv_min, improv_max = np.inf, -np.inf
+    haus_min, haus_max = np.inf, -np.inf
     
-    for mode_idx, mode in enumerate(modes):
+    for mode in modes:
         mode_data = agg_df[agg_df['mode'] == mode]
-        
         for _, row in mode_data.iterrows():
             if not np.isnan(row.get('rmse_a_mean', np.nan)):
                 rmse_min = min(rmse_min, row['rmse_a_mean'] - row.get('rmse_a_std', 0))
@@ -270,15 +340,25 @@ def plot_core_figures(agg_df, output_dir):
             if not np.isnan(row.get('improvement_bg_mean', np.nan)):
                 improv_min = min(improv_min, row['improvement_bg_mean'] - row.get('improvement_bg_std', 0))
                 improv_max = max(improv_max, row['improvement_bg_mean'] + row.get('improvement_bg_std', 0))
+            if not np.isnan(row.get('hausdorff_mean', np.nan)):
+                haus_min = min(haus_min, row['hausdorff_mean'] - row.get('hausdorff_std', 0))
+                haus_max = max(haus_max, row['hausdorff_mean'] + row.get('hausdorff_std', 0))
     
-    # Add padding
-    rmse_range = rmse_max - rmse_min
-    improv_range = improv_max - improv_min
-    rmse_min -= 0.1 * rmse_range if rmse_range > 0 else 1
-    rmse_max += 0.1 * rmse_range if rmse_range > 0 else 1
-    improv_min -= 0.1 * improv_range if improv_range > 0 else 0.1
-    improv_max += 0.1 * improv_range if improv_range > 0 else 0.1
+    # Add padding to y-limits
+    if rmse_max > rmse_min:
+        rmse_range = rmse_max - rmse_min
+        rmse_min -= 0.1 * rmse_range
+        rmse_max += 0.1 * rmse_range
+    if improv_max > improv_min:
+        improv_range = improv_max - improv_min
+        improv_min -= 0.1 * improv_range
+        improv_max += 0.1 * improv_range
+    if haus_max > haus_min:
+        haus_range = haus_max - haus_min
+        haus_min -= 0.1 * haus_range
+        haus_max += 0.1 * haus_range
     
+    # Plot each mode
     for mode_idx, mode in enumerate(modes):
         ax1 = axes1[mode_idx]
         ax2 = axes2[mode_idx]
@@ -298,17 +378,17 @@ def plot_core_figures(agg_df, output_dir):
                 subset = subset.sort_values('sigma_obs')
                 sigmas = subset['sigma_obs'].values
                 
+                label = f'{arch}-{regime.capitalize()}'
+                color = ARCH_COLORS[arch]
+                style = REGIME_STYLES[regime]
+                
                 # RMSE plot
                 if 'rmse_a_mean' in subset.columns:
                     rmse_mean = subset['rmse_a_mean'].values
                     rmse_std = subset['rmse_a_std'].values
                     
-                    label = f'{arch}-{regime.capitalize()}'
-                    color = ARCH_COLORS[arch]
-                    style = REGIME_STYLES[regime]
-                    
                     ax1.plot(sigmas, rmse_mean, color=color, linestyle=style, 
-                            marker='o', label=label, alpha=0.8)
+                            marker='o', label=label, alpha=0.85, linewidth=2.5)
                     ax1.fill_between(sigmas, rmse_mean - rmse_std, rmse_mean + rmse_std,
                                     color=color, alpha=0.15)
                 
@@ -317,12 +397,8 @@ def plot_core_figures(agg_df, output_dir):
                     improv_mean = subset['improvement_bg_mean'].values * 100  # Convert to percentage
                     improv_std = subset['improvement_bg_std'].values * 100
                     
-                    label = f'{arch}-{regime.capitalize()}'
-                    color = ARCH_COLORS[arch]
-                    style = REGIME_STYLES[regime]
-                    
                     ax2.plot(sigmas, improv_mean, color=color, linestyle=style,
-                            marker='o', label=label, alpha=0.8)
+                            marker='o', label=label, alpha=0.85, linewidth=2.5)
                     ax2.fill_between(sigmas, improv_mean - improv_std, improv_mean + improv_std,
                                     color=color, alpha=0.15)
                 
@@ -333,84 +409,90 @@ def plot_core_figures(agg_df, output_dir):
                     
                     # Only plot if we have non-NaN data
                     if not np.all(np.isnan(haus_mean)):
-                        label = f'{arch}-{regime.capitalize()}'
-                        color = ARCH_COLORS[arch]
-                        style = REGIME_STYLES[regime]
-                        
                         ax3.plot(sigmas, haus_mean, color=color, linestyle=style,
-                                marker='o', label=label, alpha=0.8)
+                                marker='o', label=label, alpha=0.85, linewidth=2.5)
                         ax3.fill_between(sigmas, haus_mean - haus_std, haus_mean + haus_std,
                                         color=color, alpha=0.15)
         
         # Configure axes
-        ax1.set_xlabel('σ_obs')
-        ax1.set_ylabel('RMSE')
-        ax1.set_title(f'Mode: {mode_labels[mode]}')
-        ax1.set_ylim(rmse_min, rmse_max)
+        ax1.set_xlabel('σ_obs', fontsize=12)
+        ax1.set_ylabel('RMSE', fontsize=12)
+        ax1.set_title(f'Mode: {mode_labels[mode]}', fontsize=13)
+        if rmse_max > rmse_min:
+            ax1.set_ylim(rmse_min, rmse_max)
         ax1.grid(True, alpha=0.3)
         
-        ax2.set_xlabel('σ_obs')
-        ax2.set_ylabel('Improvement (%)')
-        ax2.set_title(f'Mode: {mode_labels[mode]}')
-        ax2.set_ylim(improv_min * 100, improv_max * 100)
-        ax2.axhline(y=0, color='k', linestyle='--', alpha=0.3, linewidth=1)
+        ax2.set_xlabel('σ_obs', fontsize=12)
+        ax2.set_ylabel('Improvement (%)', fontsize=12)
+        ax2.set_title(f'Mode: {mode_labels[mode]}', fontsize=13)
+        if improv_max > improv_min:
+            ax2.set_ylim(improv_min * 100, improv_max * 100)
+        ax2.axhline(y=0, color='black', linestyle='--', alpha=0.4, linewidth=1.5)
         ax2.grid(True, alpha=0.3)
         
-        ax3.set_xlabel('σ_obs')
-        ax3.set_ylabel('Hausdorff Distance')
-        ax3.set_title(f'Mode: {mode_labels[mode]}')
+        ax3.set_xlabel('σ_obs', fontsize=12)
+        ax3.set_ylabel('Hausdorff Distance', fontsize=12)
+        ax3.set_title(f'Mode: {mode_labels[mode]}', fontsize=13)
         ax3.grid(True, alpha=0.3)
+        
         # Check if we have any Hausdorff data
         has_hausdorff_data = False
-        if 'hausdorff_mean' in agg_df.columns:
-            mode_hausdorff = agg_df[agg_df['mode'] == mode]['hausdorff_mean']
-            has_hausdorff_data = mode_hausdorff.notna().any()
+        if 'hausdorff_mean' in mode_data.columns:
+            has_hausdorff_data = mode_data['hausdorff_mean'].notna().any()
         if not has_hausdorff_data:
             ax3.text(0.5, 0.5, 'Data not yet available\n(Placeholder for future metric)', 
                     ha='center', va='center', transform=ax3.transAxes, 
-                    fontsize=10, alpha=0.5, style='italic')
+                    fontsize=11, alpha=0.5, style='italic')
     
-    # Add legend outside panels
+    # Add legend outside panels (right side)
     handles, labels = axes1[0].get_legend_handles_labels()
     if handles:
-        fig1.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.02),
-                   ncol=min(len(handles), 5), frameon=True, fancybox=True)
-        fig2.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.02),
-                   ncol=min(len(handles), 5), frameon=True, fancybox=True)
-        # Only add legend to fig3 if there's data
+        fig1.legend(handles, labels, loc='center left', bbox_to_anchor=(1.0, 0.5),
+                   ncol=1, frameon=True, fancybox=True)
+        fig2.legend(handles, labels, loc='center left', bbox_to_anchor=(1.0, 0.5),
+                   ncol=1, frameon=True, fancybox=True)
         handles3, labels3 = axes3[0].get_legend_handles_labels()
         if handles3:
-            fig3.legend(handles3, labels3, loc='upper center', bbox_to_anchor=(0.5, -0.02),
-                       ncol=min(len(handles3), 5), frameon=True, fancybox=True)
+            fig3.legend(handles3, labels3, loc='center left', bbox_to_anchor=(1.0, 0.5),
+                       ncol=1, frameon=True, fancybox=True)
     
+    # Save figures
     plt.figure(fig1.number)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.85, 1])
     plt.savefig(os.path.join(output_dir, 'core_rmse_by_mode.png'), dpi=300, bbox_inches='tight')
     plt.close(fig1)
     
     plt.figure(fig2.number)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.85, 1])
     plt.savefig(os.path.join(output_dir, 'core_improvement_by_mode.png'), dpi=300, bbox_inches='tight')
     plt.close(fig2)
     
     plt.figure(fig3.number)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 0.85, 1])
     plt.savefig(os.path.join(output_dir, 'core_hausdorff_by_mode.png'), dpi=300, bbox_inches='tight')
     plt.close(fig3)
     
-    print(f"✓ Generated core_rmse_by_mode.png")
-    print(f"✓ Generated core_improvement_by_mode.png")
-    print(f"✓ Generated core_hausdorff_by_mode.png")
+    print(f"  ✓ Generated core_rmse_by_mode.png")
+    print(f"  ✓ Generated core_improvement_by_mode.png")
+    print(f"  ✓ Generated core_hausdorff_by_mode.png")
 
 
 def plot_mode_specific_figures(agg_df, output_dir):
-    """Generate 3 mode-specific zoom figures (Section 4.3)."""
+    """
+    Generate 3 mode-specific zoom figures (Section 4.3).
+    
+    Each figure is a 3×1 vertical panel for a single observation mode.
+    
+    Args:
+        agg_df: Aggregated metrics DataFrame
+        output_dir: Output directory for PNG files
+    """
     
     modes = ['x', 'xy', 'x2']
     mode_labels = {'x': 'X', 'xy': 'XY', 'x2': 'X²'}
     
     for mode in modes:
-        fig, axes = plt.subplots(3, 1, figsize=(10, 12))
+        fig, axes = plt.subplots(3, 1, figsize=(9, 12))
         fig.suptitle(f'Mode {mode_labels[mode]} Summary', fontsize=14, y=0.995)
         
         mode_data = agg_df[agg_df['mode'] == mode]
@@ -443,7 +525,7 @@ def plot_mode_specific_figures(agg_df, output_dir):
                     rmse_std = subset['rmse_a_std'].values
                     
                     ax0.plot(sigmas, rmse_mean, color=color, linestyle=style,
-                            marker='o', label=label, alpha=0.8)
+                            marker='o', label=label, alpha=0.85, linewidth=2.5)
                     ax0.fill_between(sigmas, rmse_mean - rmse_std, rmse_mean + rmse_std,
                                     color=color, alpha=0.15)
                 
@@ -453,7 +535,7 @@ def plot_mode_specific_figures(agg_df, output_dir):
                     improv_std = subset['improvement_bg_std'].values * 100
                     
                     ax1.plot(sigmas, improv_mean, color=color, linestyle=style,
-                            marker='o', label=label, alpha=0.8)
+                            marker='o', label=label, alpha=0.85, linewidth=2.5)
                     ax1.fill_between(sigmas, improv_mean - improv_std, improv_mean + improv_std,
                                     color=color, alpha=0.15)
                 
@@ -465,45 +547,46 @@ def plot_mode_specific_figures(agg_df, output_dir):
                     # Only plot if we have non-NaN data
                     if not np.all(np.isnan(haus_mean)):
                         ax2.plot(sigmas, haus_mean, color=color, linestyle=style,
-                                marker='o', label=label, alpha=0.8)
+                                marker='o', label=label, alpha=0.85, linewidth=2.5)
                         ax2.fill_between(sigmas, haus_mean - haus_std, haus_mean + haus_std,
                                         color=color, alpha=0.15)
         
         # Configure axes
-        ax0.set_xlabel('σ_obs')
-        ax0.set_ylabel('RMSE')
-        ax0.set_title('Post-Assimilation RMSE')
+        ax0.set_xlabel('σ_obs', fontsize=12)
+        ax0.set_ylabel('RMSE', fontsize=12)
+        ax0.set_title('Post-Assimilation RMSE', fontsize=13)
         ax0.grid(True, alpha=0.3)
-        ax0.legend(loc='best', fontsize=8)
+        ax0.legend(loc='best', fontsize=9)
         
-        ax1.set_xlabel('σ_obs')
-        ax1.set_ylabel('Improvement (%)')
-        ax1.set_title('Improvement')
-        ax1.axhline(y=0, color='k', linestyle='--', alpha=0.3, linewidth=1)
+        ax1.set_xlabel('σ_obs', fontsize=12)
+        ax1.set_ylabel('Improvement (%)', fontsize=12)
+        ax1.set_title('Improvement', fontsize=13)
+        ax1.axhline(y=0, color='black', linestyle='--', alpha=0.4, linewidth=1.5)
         ax1.grid(True, alpha=0.3)
-        ax1.legend(loc='best', fontsize=8)
+        ax1.legend(loc='best', fontsize=9)
         
-        ax2.set_xlabel('σ_obs')
-        ax2.set_ylabel('Hausdorff Distance')
-        ax2.set_title('Hausdorff Distance')
+        ax2.set_xlabel('σ_obs', fontsize=12)
+        ax2.set_ylabel('Hausdorff Distance', fontsize=12)
+        ax2.set_title('Hausdorff Distance', fontsize=13)
         ax2.grid(True, alpha=0.3)
+        
         # Check if we have any Hausdorff data for this mode
         has_hausdorff_data = False
         if 'hausdorff_mean' in mode_data.columns:
             has_hausdorff_data = mode_data['hausdorff_mean'].notna().any()
         if has_hausdorff_data:
-            ax2.legend(loc='best', fontsize=8)
+            ax2.legend(loc='best', fontsize=9)
         else:
             ax2.text(0.5, 0.5, 'Data not yet available\n(Placeholder for future metric)', 
                     ha='center', va='center', transform=ax2.transAxes, 
-                    fontsize=10, alpha=0.5, style='italic')
+                    fontsize=11, alpha=0.5, style='italic')
         
         plt.tight_layout()
         output_file = os.path.join(output_dir, f'mode_{mode}_summary.png')
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         plt.close(fig)
         
-        print(f"✓ Generated mode_{mode}_summary.png")
+        print(f"  ✓ Generated mode_{mode}_summary.png")
 
 
 def main():
@@ -534,9 +617,9 @@ def main():
         return 1
     
     print(f"  Found {len(df)} metric entries")
-    print(f"  Regimes: {df['regime'].unique().tolist()}")
-    print(f"  Architectures: {df['architecture'].unique().tolist()}")
-    print(f"  Modes: {df['mode'].unique().tolist()}")
+    print(f"  Regimes: {sorted(df['regime'].unique().tolist())}")
+    print(f"  Architectures: {sorted(df['architecture'].unique().tolist())}")
+    print(f"  Modes: {sorted(df['mode'].unique().tolist())}")
     print()
     
     # Step 2: Aggregate metrics
@@ -568,7 +651,7 @@ def main():
     print()
     
     print("="*70)
-    print("✓ All figures generated successfully!")
+    print("✓ ALL FIGURES GENERATED SUCCESSFULLY!")
     print("="*70)
     print()
     print(f"Output location: {output_dir}")
@@ -582,7 +665,11 @@ def main():
     print("  6. mode_xy_summary.png")
     print("  7. mode_x2_summary.png")
     print()
-    print("Note: Hausdorff distance panels show placeholder text (data not yet available)")
+    print("Summary:")
+    print(f"  • Metric files parsed: {len(df)}")
+    print(f"  • Aggregated metric rows: {len(agg_df)}")
+    print(f"  • Color scheme: MLP=blue, GRU=green, LSTM=red")
+    print(f"  • Line styles: baseline=dotted, fixedmean=dashed, resample=solid")
     print()
     
     return 0
