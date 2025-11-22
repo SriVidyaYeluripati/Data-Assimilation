@@ -56,8 +56,8 @@ REGIME_STYLES = {
     'resample': ':'
 }
 
-# Define sigma values we expect
-SIGMA_VALUES = [0.05, 0.10, 0.50, 1.00]
+# Small epsilon for numerical stability in calculations
+EPSILON = 1e-8
 
 
 def extract_info_from_path(filepath):
@@ -128,9 +128,9 @@ def parse_csv_metrics(filepath):
                 elif 'improvement_pct' in row:
                     improv_pct = row['improvement_pct']
                 else:
-                    # Calculate as (rmse_b - rmse_a) / (rmse_b + 1e-8) * 100
+                    # Calculate as (rmse_b - rmse_a) / (rmse_b + epsilon) * 100
                     if not np.isnan(rmse_b) and not np.isnan(rmse_a):
-                        improvement_bg = (rmse_b - rmse_a) / (rmse_b + 1e-8)
+                        improvement_bg = (rmse_b - rmse_a) / (rmse_b + EPSILON)
                         improv_pct = improvement_bg * 100
                     else:
                         improv_pct = np.nan
@@ -161,13 +161,6 @@ def parse_csv_metrics(filepath):
         return []
 
 
-def parse_json_metrics(filepath):
-    """Parse JSON metric files and return list of records (if applicable)."""
-    # JSON files appear to be training logs, not evaluation metrics
-    # Return empty list for now
-    return []
-
-
 def collect_all_metrics(results_dirs):
     """Recursively collect all metrics from specified directories."""
     all_records = []
@@ -182,12 +175,6 @@ def collect_all_metrics(results_dirs):
         for csv_file in csv_files:
             records = parse_csv_metrics(csv_file)
             all_records.extend(records)
-        
-        # Find all JSON files (currently not used for metrics)
-        # json_files = glob.glob(os.path.join(results_dir, '**/metrics/*.json'), recursive=True)
-        # for json_file in json_files:
-        #     records = parse_json_metrics(json_file)
-        #     all_records.extend(records)
     
     return pd.DataFrame(all_records)
 
