@@ -444,12 +444,13 @@ Two complementary training regimes govern how background states are provided, fo
 \medskip
 \noindent\textbf{Seeding and averaging policy.}
 To obtain statistically robust performance estimates, every $(\text{architecture}\times\text{regime}\times\text{mode}\times\sigma)$
-configuration is trained for $N=5$ independent seeds (different RNG seeds and weight initializations).
+configuration is trained once with a fixed seed for reproducibility.
 Evaluation is performed on $K=500$ held-out test trajectories; for each test trajectory
-we draw $S=3$ independent observation-noise realizations. Reported aggregate metrics
-(e.g., RMSE, Improvement$_{\mathrm{bg}}$, Hausdorff) therefore summarize
-$N\times K\times S$ samples in total (i.e., $5\times 500\times 3=7{,}500$ samples).
-Qualitative figures (representative trajectory reconstructions) use $K=5$ test trajectories
+we draw $S=3$ independent observation-noise realizations. Additionally, $K_{\text{unseen}}=3$ fully unseen trajectories
+(generated from new initial conditions with seed 4321) are used for generalization testing.
+Reported aggregate metrics (e.g., RMSE, Improvement$_{\mathrm{bg}}$, Hausdorff) therefore summarize
+$K\times S$ samples in total (i.e., $500\times 3=1{,}500$ samples).
+Qualitative figures (representative trajectory reconstructions) use $n_{\text{test}}=5$ test trajectories
 to keep plots legible; we mark these figures as ``qualitative'' in their captions.
 
 \noindent
