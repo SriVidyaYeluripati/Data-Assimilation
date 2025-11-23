@@ -63,7 +63,7 @@ os.makedirs(FIGS_DIR, exist_ok=True)
 # ==================== Observation Operators ====================
 def obs_operator(x, mode="x"):
     """
-    Observation operators as defined in observation_operators.py
+    Observation operators as defined in src/utils/observations.py
     Args:
         x: state vector [3]
         mode: 'x', 'xy', or 'x2'
@@ -282,7 +282,7 @@ def evaluate_model(model, arch, mode, sigma, test_traj, B_mean,
         
         # Compute divergence rate (step-by-step errors)
         errors = np.sqrt(np.mean((truth - pred_a)**2, axis=1))
-        divergence = compute_divergence_rate(errors, threshold=10.0)
+        divergence = compute_divergence_rate(errors)
         
         rmse_b_list.append(rmse_b)
         rmse_a_list.append(rmse_a)

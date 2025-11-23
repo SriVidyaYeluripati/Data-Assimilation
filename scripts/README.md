@@ -83,7 +83,7 @@ The time step at which RMSE exceeds a threshold (10.0), indicating trajectory di
 
 ## Observation Operators
 
-Implemented exactly as in `observation_operators.py`:
+Implemented exactly as in `src/utils/observations.py`:
 
 - **x**: Observe first component only → `y = [x[0]]`
 - **xy**: Observe first two components → `y = [x[0], x[1]]`
