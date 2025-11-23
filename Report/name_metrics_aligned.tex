@@ -171,7 +171,7 @@ This project makes several detailed contributions to the study of data assimilat
 \item \textbf{Failure Analysis and Stability Quantification:} By documenting the instability of the FixedMean approach and systematically increasing noise up to $\sigma=1.0$, the project quantitatively determines the critical thresholds (i.e., $\sigma \approx 0.5$) at which the learned methods begin to degrade gracefully or fail outright.
 \item \textbf{Foundation for Future Generative Work:} The robust setup and performance baselines established here provide the necessary foundation for future exploration of advanced models, such as Generative Neural Networks (e.g., Generative LSTM), as noted in the project outlook.
 \end{enumerate}
-The following is a maximally detailed and refined version of Section 2 (Background), structured to comprehensively cover the theoretical foundation of Data Assimilation (DA), the innovative AI-DA framework, and the specifics of the Lorenz-63 testbed, drawing extensively on the information provided in the report.
+
 \section{Background}
 \subsection{Data Assimilation (DA) and the Variational Principle}
 Data assimilation (DA) is a specialized methodology essential for state estimation in complex physical and geophysical systems, particularly those characterized by high dimensionality and sensitive dependence on initial conditions, such as atmospheric and ocean models. The fundamental purpose of DA is to estimate the true, latent state of a system by optimally combining prior knowledge—known as the \textit{background} or forecast state—with sparse, noisy observations gathered from sensors. This optimal combination results in the \textit{analysis} state, which is then used as the initial condition for the subsequent model forecast.
@@ -209,12 +209,8 @@ This machine learning approach offers several critical advantages:
 \item \textbf{Nonlinear Approximation:} Neural networks have the capacity to learn complex, non-linear relationships directly from data, potentially capturing dynamics that might be overlooked or simplified by traditional linearized variational methods.
 \end{enumerate}
 \subsubsection*{The Critical Constraint: Absence of True Ground Truth}
-A crucial element is that the true state $x_{\text{true}}$ is \textbf{unobservable} in realistic DA. Training is therefore self-supervised: we backpropagate through the 3D-Var cost $J(\hat{x}^a)$ and do not use analysis labels ($a^\star$). Truth and $a^\star$ are computed only for offline evaluation and diagnostics (e.g., RMSE and geometry metrics). 
+A crucial element is that the true state $x_{\text{true}}$ is \textbf{unobservable} in realistic DA. Training is therefore self-supervised: we backpropagate through the 3D-Var cost $J(\hat{x}^a)$ and do not use analysis labels ($a^\star$). Truth and $a^\star$ are computed only for offline evaluation and diagnostics (e.g., RMSE and geometry metrics). This constraint means the network must learn to reconstruct trajectories based on observations and the statistical information provided by the background state and its error covariance.
 
-\medskip
-\noindent
-Consequently, the network cannot be trained on the true state ($x_{\text{true}}$). Instead, training is self-supervised: we backpropagate through the 3D-Var cost $J(\hat{x}^a)$ and do not use analysis labels ($a^\star$).
-This constraint means the network must learn to reconstruct trajectories based on "vague knowledge and observations,", relying heavily on the statistical information provided by the background state and its error covariance.  even if the system explodes in specific unstable regimes, the "truth anchor" used in preliminary experiments relies on the true mean, which is inaccessible in a realistic DA setting.
 \subsection{The Lorenz-63 Testbed and Problem Formulation}
 To rigorously evaluate the viability and limitations of the AI-DA framework, this project employs the \textbf{Lorenz-63 system} as a canonical testbed \cite{lorenz_1963}. Introduced by Edward Lorenz in 1963, this three-dimensional system models atmospheric convection and is defined by the set of coupled ordinary differential equations:
 $$
@@ -251,7 +247,7 @@ These architectures are analyzed across three key training paradigms defined by 
 \item \textbf{Resample Regime:} Uses a \textbf{dynamically updated prior} by resampling the background at every training step, which acts as data-level regularization to improve generalization and robustness \cite{ai_da_fablet}.
 \end{itemize}
 This structured comparison is essential for documenting the key project insights: the effectiveness of temporal architectures and the necessity of the resampling strategy for robust AI-DA performance.
-This is the revised LaTeX output for Section 3 (Methods), significantly elaborated to be as detailed and comprehensive as possible, ensuring a "very clean setup", particularly regarding the loss function, the inclusion of the Baseline model, and the systematic testing across noise regimes.
+
 \newpage
 \section{Methods}
 The methodology deployed in this project is characterized by a high degree of control and systematic comparison, designed to isolate the performance contributions of architectural choice and background conditioning strategy within the AI-DA framework. All experiments were conducted within a unified pipeline to ensure complete traceability and comparability across model variants, observation modes, and noise regimes.
@@ -498,12 +494,12 @@ This section summarizes the experimental configuration used to evaluate the AI-b
 
 \subsubsection{Data Generation and Observation Configurations}
 
-All data are derived from the canonical Lorenz-63 chaotic system \cite{lorenz_1963}, integrated using a fourth-order Runge--Kutta scheme with time step $\Delta t = 0.01$ and standard parameters ($\sigma = 10$, $\rho = 28$, $\beta = 8/3$). A total of 1500 trajectories were generated, each containing 200 time steps. The dataset was split into training (1000 trajectories), validation (250 trajectories), and test (250 trajectories) sets to ensure robust evaluation.
+All data are derived from the canonical Lorenz-63 chaotic system \cite{lorenz_1963}, integrated using a fourth-order Runge--Kutta scheme with time step $\Delta t = 0.01$ and standard parameters ($\sigma = 10$, $\rho = 28$, $\beta = 8/3$). A total of 1500 trajectories were generated, each containing 200 time steps. The dataset was split into training (1000 trajectories) and test (500 trajectories) sets to ensure robust evaluation.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\linewidth]{Dataset.png}
-\caption{Dataset distribution across train, validation, and test splits for all observation modes and noise levels. Each configuration contributes approximately $2.94 \times 10^5$ effective samples, ensuring balanced evaluation.}
+\caption{Dataset distribution across train and test splits for all observation modes and noise levels. Each configuration contributes approximately $2.94 \times 10^5$ effective samples, ensuring balanced evaluation.}
 \label{fig:dataset_dist}
 \end{figure}
 
@@ -1262,9 +1258,8 @@ This work emphasizes the need for rigorous experimental design that clearly sepa
 \begin{thebibliography}{99}
 \bibitem{lorenz_1963} Lorenz, E. N. (1963). Deterministic nonperiodic flow. \textit{Journal of the Atmospheric Sciences, 20}(2), 130-141.
 \bibitem{kalman_1960} Kalman, R. E. (1960). A new approach to linear filtering and prediction problems. \textit{Journal of Basic Engineering, 82}(1), 35–45.
-\bibitem{variational_da} Fablet, R., Ouala, S., \& Herzet, C. (2021). Learning variational data assimilation models and solvers. \textit{Journal of Advances in Modeling Earth Systems, 13}(3), e2020MS002256.
-\bibitem{ensemble_methods} Evensen, G. (1994). Sequential data assimilation... Monte Carlo methods. \textit{Journal of Geophysical Research, 99}(C5), 10143-10162. Also Houtekamer, P. L., \& Mitchell, H. L. (1998). Data assimilation using an ensemble Kalman filter technique. \textit{Monthly Weather Review, 126}(3), 796-811.
 \bibitem{ai_da_fablet} Fablet, R., Ouala, S., \& Herzet, C. (2021). Learning variational data assimilation models and solvers. \textit{Journal of Advances in Modeling Earth Systems, 13}(3), e2020MS002256.
+\bibitem{ensemble_methods} Evensen, G. (1994). Sequential data assimilation... Monte Carlo methods. \textit{Journal of Geophysical Research, 99}(C5), 10143-10162. Also Houtekamer, P. L., \& Mitchell, H. L. (1998). Data assimilation using an ensemble Kalman filter technique. \textit{Monthly Weather Review, 126}(3), 796-811.
 \bibitem{neural_da_bocquet} Bocquet, M., Farchi, A., \& Malartic, Q. (2023). Neural incremental data assimilation. arXiv preprint arXiv:2406.15076.
 \end{thebibliography}
 
