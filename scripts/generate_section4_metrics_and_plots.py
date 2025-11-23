@@ -22,6 +22,12 @@ import matplotlib.pyplot as plt
 from scipy.spatial.distance import directed_hausdorff
 from sklearn.metrics import mean_squared_error
 
+# Constants
+EPSILON = 1e-8  # Small value to avoid division by zero
+DIVERGENCE_THRESHOLD = 10.0  # RMSE threshold for trajectory divergence
+LORENZ_ATTRACTOR_RANGE = 50.0  # Typical coordinate range for normalization
+RANDOM_SEED = 42  # For reproducibility
+
 # Set up project paths
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if PROJECT_ROOT not in sys.path:
@@ -84,6 +90,7 @@ def make_noisy_observations(traj, mode, sigma):
     Returns:
         obs: [steps, obs_dim]
     """
+    np.random.seed(RANDOM_SEED)  # For reproducibility
     obs = np.array([obs_operator(x, mode) for x in traj])
     obs_noisy = obs + np.random.normal(0, sigma, obs.shape)
     return obs_noisy
@@ -184,7 +191,7 @@ def compute_rmse(truth, pred):
     """Compute RMSE between truth and prediction."""
     try:
         return np.sqrt(mean_squared_error(truth, pred))
-    except:
+    except (ValueError, Exception) as e:
         return np.nan
 
 
@@ -202,22 +209,23 @@ def compute_hausdorff(truth, pred):
         d2 = directed_hausdorff(pred, truth)[0]
         hausdorff = max(d1, d2)
         
-        # Normalize by typical Lorenz attractor range (~50 in each dimension)
-        normalization = 50.0
-        return hausdorff / normalization
-    except:
+        # Normalize by typical Lorenz attractor range
+        return hausdorff / LORENZ_ATTRACTOR_RANGE
+    except (ValueError, Exception) as e:
         return np.nan
 
 
-def compute_divergence_rate(errors, threshold=10.0):
+def compute_divergence_rate(errors, threshold=None):
     """
     Compute divergence rate: step at which RMSE exceeds threshold.
     Args:
         errors: array of per-step errors
-        threshold: divergence threshold
+        threshold: divergence threshold (uses DIVERGENCE_THRESHOLD if None)
     Returns:
         divergence step (or -1 if never diverges)
     """
+    if threshold is None:
+        threshold = DIVERGENCE_THRESHOLD
     diverged_steps = np.where(errors > threshold)[0]
     if len(diverged_steps) > 0:
         return diverged_steps[0]
@@ -267,7 +275,7 @@ def evaluate_model(model, arch, mode, sigma, test_traj, B_mean,
         rmse_a = compute_rmse(truth, pred_a)
         
         # Compute improvement
-        improvement = (rmse_b - rmse_a) / (rmse_b + 1e-8)
+        improvement = (rmse_b - rmse_a) / (rmse_b + EPSILON)
         
         # Compute Hausdorff distance
         hausdorff = compute_hausdorff(truth, pred_a)
@@ -283,6 +291,10 @@ def evaluate_model(model, arch, mode, sigma, test_traj, B_mean,
         divergence_list.append(divergence)
     
     # Aggregate statistics
+    # Handle divergence_rate separately to avoid warnings with empty lists
+    diverged_values = [d for d in divergence_list if d >= 0]
+    divergence_rate_mean = np.mean(diverged_values) if len(diverged_values) > 0 else np.nan
+    
     results = {
         'rmse_b_mean': np.nanmean(rmse_b_list),
         'rmse_b_std': np.nanstd(rmse_b_list),
@@ -297,7 +309,7 @@ def evaluate_model(model, arch, mode, sigma, test_traj, B_mean,
         'hausdorff_mean': np.nanmean(hausdorff_list),
         'hausdorff_std': np.nanstd(hausdorff_list),
         'hausdorff_median': np.nanmedian(hausdorff_list),
-        'divergence_rate': np.mean([d for d in divergence_list if d >= 0]),
+        'divergence_rate': divergence_rate_mean,
     }
     
     return results
