@@ -28,6 +28,9 @@ DIVERGENCE_THRESHOLD = 10.0  # RMSE threshold for trajectory divergence
 LORENZ_ATTRACTOR_RANGE = 50.0  # Typical coordinate range for normalization
 RANDOM_SEED = 42  # For reproducibility
 
+# Set random seed for reproducibility
+np.random.seed(RANDOM_SEED)
+
 # Set up project paths
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 if PROJECT_ROOT not in sys.path:
@@ -39,8 +42,8 @@ from src.utils.lorenz import lorenz63_step
 # Global configurations
 SEQ_LEN = 5
 DT = 0.01
-STEPS = 200
-N_TEST = 500  # Use all test trajectories
+STEPS = 50  # Number of steps to evaluate
+N_TEST = 50  # Number of test trajectories to use for evaluation
 
 # Directory paths (handle spaces in directory names)
 DATA_DIR = os.path.join(PROJECT_ROOT, "data ")
@@ -90,7 +93,6 @@ def make_noisy_observations(traj, mode, sigma):
     Returns:
         obs: [steps, obs_dim]
     """
-    np.random.seed(RANDOM_SEED)  # For reproducibility
     obs = np.array([obs_operator(x, mode) for x in traj])
     obs_noisy = obs + np.random.normal(0, sigma, obs.shape)
     return obs_noisy
@@ -329,7 +331,7 @@ def find_all_models():
         for fpath in glob.glob(os.path.join(RESAMPLE_DIR, "*.pth")):
             fname = os.path.basename(fpath)
             # Pattern: {mode}_{arch}_n{sigma}_R{R}.pth
-            m = re.match(r"([a-z0-9]+)_([a-z]+)_n([0-9.]+)_R([0-9.]+)\.pth", fname)
+            m = re.match(r"([a-z0-9]+)_([a-z]+)_n([0-9]+(?:\.[0-9]+)?)_R([0-9]+(?:\.[0-9]+)?)\.pth", fname)
             if m:
                 mode, arch, sigma_str, R_str = m.groups()
                 models.append({
@@ -346,7 +348,7 @@ def find_all_models():
         for fpath in glob.glob(os.path.join(FIXEDMEAN_DIR, "*.pth")):
             fname = os.path.basename(fpath)
             # Pattern: {mode}_{arch}_n{sigma}_R{R}.pth
-            m = re.match(r"([a-z0-9]+)_([a-z]+)_n([0-9.]+)_R([0-9.]+)\.pth", fname)
+            m = re.match(r"([a-z0-9]+)_([a-z]+)_n([0-9]+(?:\.[0-9]+)?)_R([0-9]+(?:\.[0-9]+)?)\.pth", fname)
             if m:
                 mode, arch, sigma_str, R_str = m.groups()
                 models.append({
@@ -363,7 +365,7 @@ def find_all_models():
         for fpath in glob.glob(os.path.join(BASELINE_DIR, "*.pth")):
             fname = os.path.basename(fpath)
             # Pattern: {mode}_n{sigma}.pth
-            m = re.match(r"([a-z0-9]+)_n([0-9.]+)\.pth", fname)
+            m = re.match(r"([a-z0-9]+)_n([0-9]+(?:\.[0-9]+)?)\.pth", fname)
             if m:
                 mode, sigma_str = m.groups()
                 models.append({
@@ -593,8 +595,8 @@ def main():
                 model_info['sigma'],
                 test_traj,
                 B_mean,
-                n_test=50,  # Use 50 test trajectories for speed
-                steps=50,   # Evaluate first 50 steps
+                n_test=N_TEST,  # Use constant
+                steps=STEPS,    # Use constant
                 device=device
             )
             
