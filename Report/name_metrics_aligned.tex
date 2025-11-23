@@ -214,7 +214,7 @@ A crucial element is that the true state $x_{\text{true}}$ is \textbf{unobservab
 \subsection{The Lorenz-63 Testbed and Problem Formulation}
 To rigorously evaluate the viability and limitations of the AI-DA framework, this project employs the \textbf{Lorenz-63 system} as a canonical testbed \cite{lorenz_1963}. Introduced by Edward Lorenz in 1963, this three-dimensional system models atmospheric convection and is defined by the set of coupled ordinary differential equations:
 $$
-\frac{dx}{dt} = \sigma_L (y - x), \quad \frac{dy}{dt} = x(\rho - z) - y, \quad \frac{dz}{dt} = xy - \beta z.
+\frac{dx}{dt} = \sigma (y - x), \quad \frac{dy}{dt} = x(\rho - z) - y, \quad \frac{dz}{dt} = xy - \beta z.
 $$
 The standard parameters used are $\sigma = 10$, $\rho = 28$, and $\beta = 8/3$. The system exhibits chaotic dynamics characterized by the double-wing attractor, making it a demanding benchmark for testing state estimation methods due to its sensitive dependence on initial conditions.
 \medskip
@@ -345,7 +345,7 @@ The Lorenz-63 system is defined by its three coupled ordinary differential equat
 $$
 \frac{dx}{dt} = \sigma (y - x), \quad\frac{dy}{dt} = x(\rho - z) - y, \quad\frac{dz}{dt} = xy - \beta z
 $$
-Standard chaotic parameters ($\sigma_L = 10$, $\rho = 28$, and $\beta = 8/3$) were used, and the system was integrated via a fourth-order Runge--Kutta scheme with fixed time step $\Delta t = 0.01$. Long trajectories (20,000 time steps) were generated to ensure sufficient coverage of the system's characteristic double-wing attractor manifold \cite{lorenz_1963}.
+Standard chaotic parameters ($\sigma = 10$, $\rho = 28$, and $\beta = 8/3$) were used, and the system was integrated via a fourth-order Runge--Kutta scheme with fixed time step $\Delta t = 0.01$. Long trajectories (20,000 time steps) were generated to ensure sufficient coverage of the system's characteristic double-wing attractor manifold \cite{lorenz_1963}.
 
 \subsubsection{Observation Operators and Noise Regimes}
 The problem involves estimating the full 3D state vector $\mathbf{x} = (x, y, z)$ from \textbf{partial and noisy observations}. Three distinct observation modes ($H$) were implemented to systematically investigate varying levels of information richness and non-linearity, a key component of the experimental design.
@@ -953,7 +953,7 @@ The Resample-GRU model exhibits graceful degradation as observation sparsity inc
 
 \begin{table}[H]
 \centering
-\caption{Practical recommendations for AI-Variational Data Assimilation in chaotic systems.}
+\caption{Practical recommendations for AI-Based Data Assimilation (AI-DA) in chaotic systems.}
 \label{tab:recommendations}
 \begin{tabularx}{\textwidth}{|l|l|X|}
 \hline
