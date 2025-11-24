@@ -844,13 +844,13 @@ $\sigma$ & MLP & GRU & LSTM & MLP & GRU & LSTM \\
 \bottomrule
 \end{tabular}
 \end{table}
-
+\noindent
 Table~\ref{tab:xy_resample} quantifies these observations for the $xy$ mode, showing that Resample maintains both low RMSE and excellent geometric fidelity (low Hausdorff distance) across all noise levels.
 
 \subsubsection{Attractor Geometry Preservation}
 
 Effective data assimilation in chaotic systems requires preserving not only instantaneous accuracy but also the \textbf{global geometric structure} of the underlying attractor. While short-window RMSE metrics capture local trajectory fidelity, they do not guarantee that the learned analysis functional reproduces the correct attractor manifold over extended time horizons. This distinction between \textit{local correctness} (accurate state estimates at individual time steps) and \textit{global structural fidelity} (preservation of the attractor's topology and geometry) is critical for chaotic systems, where small deviations can compound into qualitatively different long-term behavior.
-
+\noindent
 To rigorously assess global attractor preservation, we employ two complementary diagnostics that address distinct aspects of structural accuracy: \textbf{global-normalized Hausdorff distance}, which quantifies geometric alignment between analysis and truth manifolds, and \textbf{lobe occupancy discrepancy}, which validates that trajectories visit both wings of the butterfly-shaped Lorenz-63 attractor with truth-consistent frequency.
 
 \paragraph{Global-Normalized Hausdorff Distance}
@@ -867,32 +867,33 @@ where $\text{diam}(\mathcal{A}_{\text{truth, global}})$ is computed once from a 
 \caption{Global-normalized Hausdorff distances ($\tilde{H}_{\text{global}}$) for Resample and FixedMean regimes at four noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$) in the $xy$ observation mode. Each point represents the median $\tilde{H}_{\text{global}}$ across test trajectories, with error bars indicating interquartile range (IQR). Resample consistently achieves low geometric deviation ($\tilde{H}_{\text{global}} \approx 0.32$) with tight dispersion, demonstrating superior structural fidelity independent of noise level. FixedMean exhibits substantially higher deviation ($\tilde{H}_{\text{global}} \approx 1.50$) and increased variance, particularly at $\sigma \geq 0.50$, symptomatic of structural collapse and attractor escape. Baseline regime is omitted from this analysis due to frequent trajectory collapse and inability to maintain chaotic dynamics over the required integration window for attractor reconstruction.}
 \label{fig:global_hausdorff}
 \end{figure}
-
+\noindent
 Figure~\ref{fig:global_hausdorff} demonstrates that Resample maintains consistently low $\tilde{H}_{\text{global}}$ values across all noise levels, approximately 4.7× lower than FixedMean. The tight clustering of Resample values (narrow IQR) reflects robust, noise-invariant geometric adherence. In contrast, FixedMean exhibits both elevated median deviation and increasing variance at higher noise ($\sigma \geq 0.50$), symptomatic of structural collapse and attractor escape. The flat response of Resample to increasing noise confirms that dynamic background updates provide a noise-robust geometric anchor, preventing drift from the true manifold.
-
+\noindent
 Baseline regime results are omitted from this figure because the absence of background priors frequently leads to trajectory collapse---the analysis drifts toward fixed points or exhibits non-chaotic behavior that cannot sustain the extended integration required for attractor geometry diagnostics. This failure underscores the fundamental necessity of incorporating dynamical system structure (via background distributions) into the learning process for chaotic DA.
 
 \paragraph{Lobe Occupancy Discrepancy: Global Topology Validation}
 
 While Hausdorff distance quantifies local manifold alignment, it does not guarantee that trajectories explore the attractor's global structure correctly. The Lorenz-63 attractor exhibits a characteristic \textit{double-lobe} ("butterfly") topology, with trajectories alternating between left ($x < 0$) and right ($x > 0$) wings via crossings of the separatrix. A robust assimilation scheme must preserve this global topology: analysis trajectories should visit both lobes with truth-consistent frequency, ensuring correct separatrix crossings.
-
+\noindent
 We quantify this via \textbf{lobe occupancy analysis}. For each trajectory, we classify time steps into left lobe ($x < 0$) versus right lobe ($x > 0$) and compute the fractional occupancy of each lobe. The \textbf{lobe occupancy discrepancy} is defined as:
 \[
 \Delta_{\text{lobe}} = \left| \frac{n_{\text{left}}^{\text{analysis}}}{N} - \frac{n_{\text{left}}^{\text{truth}}}{N} \right|,
 \]
 where $n_{\text{left}}$ denotes the count of time steps in the left lobe and $N$ is the total trajectory length. A robust assimilation scheme should yield $\Delta_{\text{lobe}} \approx 0$, indicating balanced wing visitation and proper global topology preservation.
 
-\begin{figure}[H]
+\begin{figure} [H]
 \centering
 \includegraphics[width=\textwidth]{lobe_occupancy_diff_heatmap.png}
-\caption{Heatmap of lobe occupancy discrepancy ($\Delta_{\text{lobe}}$) across regimes (rows: Baseline, FixedMean, Resample) and observation modes (columns: $x$, $xy$, $x^2$) at four noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$). Color intensity indicates absolute discrepancy magnitude; lighter colors (white/pale pink) represent near-perfect occupancy matching ($\Delta_{\text{lobe}} \approx 0$), while darker colors (dark red/brown) indicate significant lobe imbalance. Resample (bottom row) consistently achieves the lowest $\Delta_{\text{lobe}}$ across all modes and noise levels (light colors), demonstrating global shape preservation via correct separatrix crossings. FixedMean (middle row) shows elevated discrepancies ($\Delta_{\text{lobe}} \approx 0.10$--0.15), particularly for $x$ and $x^2$ modes at high noise, symptomatic of attractor escape and lobe bias. Baseline (top row) exhibits intermediate performance with strong mode dependence, with the $x^2$ mode showing particularly high discrepancies (dark red, $\Delta_{\text{lobe}} \approx 0.44$).}
+\caption{Lobe occupancy discrepancy ($\Delta_{\text{lobe}}$) for all regimes and observation modes across four noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$). Color intensity indicates the absolute difference between truth and analysis lobe fractions. Light cells correspond to near-perfect lobe matching ($\Delta_{\text{lobe}} \approx 0$), whereas dark red indicates substantial imbalance. Resample models achieve uniformly low discrepancies across modes, indicating correct separatrix crossings and global attractor coverage. FixedMean shows moderate bias ($\Delta_{\text{lobe}} \approx 0.10$–0.15), particularly at higher noise. Baseline performance varies by mode, with the $x^2$ case exhibiting the highest discrepancies.}
+
 \label{fig:lobe_discrepancy}
 \end{figure}
-
+\noindent
 Figure~\ref{fig:lobe_discrepancy} reveals stark regime-dependent differences in global structural fidelity. Resample achieves near-zero lobe occupancy discrepancy ($\Delta_{\text{lobe}} < 0.02$) across all observation modes and noise levels, confirming that dynamic background updates enable correct separatrix crossing and balanced wing visitation. The $xy$ mode under Resample is particularly robust, maintaining $\Delta_{\text{lobe}} < 0.02$ even at $\sigma=1.00$, indicating that dual-component observations provide sufficient constraint for global topology preservation.
-
+\noindent
 In contrast, FixedMean exhibits substantial lobe imbalances, especially at higher noise levels and for single-component observations ($x$ and $x^2$ modes). For instance, at $\sigma=0.50$ under the $x$ mode, FixedMean shows $\Delta_{\text{lobe}} \approx 0.15$, indicating that approximately 15\% of the trajectory incorrectly accumulates in one lobe. This aligns with observed attractor escape failures: without dynamic updates, the static prior biases the analysis toward one wing, preventing proper chaotic evolution across the separatrix.
-
+\noindent
 The Baseline regime demonstrates intermediate behavior: while not as catastrophic as FixedMean, it still exhibits mode-dependent lobe bias. The $x^2$ mode under Baseline shows elevated $\Delta_{\text{lobe}}$ at all noise levels, likely because the nonlinear observation function removes sign information, obscuring the lobe transition signal and hindering global trajectory reconstruction. This mode-dependent sensitivity highlights the interaction between observation information content and the ability to infer global attractor structure without explicit background guidance.
 
 \paragraph{Synthesis: Dual Metrics for Structural Accuracy}
@@ -903,9 +904,9 @@ Together, global-normalized Hausdorff distance and lobe occupancy discrepancy pr
 \item \textbf{Hausdorff ($\tilde{H}_{\text{global}}$):} Quantifies local manifold alignment---how closely the analysis trajectory adheres to the truth manifold at each point. Low $\tilde{H}_{\text{global}}$ ensures geometric fidelity but does not guarantee global coverage.
 \item \textbf{Lobe Occupancy ($\Delta_{\text{lobe}}$):} Quantifies global topology preservation---whether the analysis visits both wings of the attractor with the correct frequency. Low $\Delta_{\text{lobe}}$ ensures separatrix crossing fidelity and balanced exploration.
 \end{enumerate}
-
+\noindent
 Resample achieves excellence on both metrics: low $\tilde{H}_{\text{global}}$ (local geometry) and low $\Delta_{\text{lobe}}$ (global coverage). This dual success demonstrates that dynamic background updates enable the learned functional to \textit{simultaneously} track the local chaotic manifold \textit{and} reproduce the global double-wing structure. In contrast, FixedMean fails on both fronts, exhibiting elevated Hausdorff distances and substantial lobe imbalances. Baseline shows partial success but lacks the precision and robustness needed for operational deployment.
-
+\noindent
 These findings confirm that preserving attractor geometry in chaotic DA requires \textit{both} accurate local corrections (captured by RMSE and Hausdorff) \textit{and} global structural awareness (captured by lobe occupancy). The Resample regime satisfies both requirements across all tested conditions, validating stochastic background resampling as a fundamental requirement for faithful attractor reconstruction. Additional visual diagnostics, including phase-space projections and multi-regime attractor grids, are provided in Appendix~\ref{sec:app_attractor} for detailed qualitative assessment.
 
 \subsubsection{Component‑Wise Correction Patterns}
@@ -947,10 +948,10 @@ To distill actionable insights for implementing AI-DA in operational settings, t
 \end{figure}
 
 Figure~\ref{fig:background_stability} quantifies the fundamental divergence in stability between FixedMean and Resample regimes. The Resample strategy introduces stochastic variability in the background mean $\bar{x}$ and covariance $B$, functioning as data-level regularization. This results in remarkably stable RMSE across all noise levels, degrading gracefully even up to $\sigma = 1.0$.
-
+\noindent
 In contrast, the FixedMean regime, which relies on a constant prior, becomes fundamentally unstable beyond moderate noise ($\sigma > 0.5$). At high noise levels, FixedMean exhibits the \textit{attractor escape} failure mode, with RMSE values spiking from $\approx 5$ to over 150 in extreme cases. The failure rate (cases showing negative improvement or divergence) reaches 70--80\% for FixedMean compared to only 20--25\% for Resample at $\sigma \geq 0.5$.
-
-\textbf{Recommendation:} Avoid FixedMean at $\sigma > 0.5$. The Resample (stochastic) regime is strongly recommended as it is robust to observation uncertainty and promotes reproducible assimilation trajectories. For operational systems, background statistics should be continuously updated from ensemble forecasts to prevent overfitting to static priors.
+\noindent
+ Avoiding FixedMean at $\sigma > 0.5$. The Resample (stochastic) regime is strongly recommended as it is robust to observation uncertainty and promotes reproducible assimilation trajectories. For operational systems, background statistics should be continuously updated from ensemble forecasts to prevent overfitting to static priors.
 
 \subsubsection{Temporal Context (Sequence Length)}
 
@@ -961,13 +962,13 @@ Recurrent architectures leverage observation windows $y_{t-L+1:t}$ to infer temp
 \item Beyond $L = 10$ or $L = 15$, RMSE plateaus or slightly increases, indicating diminishing returns as older information becomes irrelevant due to chaos or introduces noise.
 \item LSTM consistently achieves lower minimum RMSE than GRU across tested sequence lengths, although both RNNs significantly outperform the memory-less MLP.
 \end{itemize}
-
-\textbf{Recommendation:} Use sequence length $L = 10$--15 time steps for recurrent models. Longer sequences yield diminishing returns and increased computational cost without improving accuracy.
+\noindent
+Using sequence length $L = 10$--15 time steps for recurrent models. Longer sequences yield diminishing returns and increased computational cost without improving accuracy.
 
 \subsubsection{Background Covariance Sensitivity}
 
 The system's sensitivity to misestimation of the background error covariance $B$ was tested by scaling the true $B$ matrix by a factor $\lambda$ (Appendix Figure~\ref{fig:app_B_scaling}). This intentionally misestimated background uncertainty while keeping observation covariance $R$ constant.
-
+\noindent
 The results validate the fundamental principle of variational data assimilation:
 
 \begin{enumerate}
@@ -977,8 +978,8 @@ The results validate the fundamental principle of variational data assimilation:
 
 \item \textbf{Regime-specific robustness} -- Resample demonstrates substantially higher tolerance to $B$ misestimation than FixedMean (Appendix Figure~\ref{fig:app_B_regime}). Resample's U-shaped curve has a shallower, broader basin around $\lambda = 1.0$, while FixedMean's RMSE spikes dramatically with even small deviations.
 \end{enumerate}
-
-\textbf{Recommendation:} Validate $B$ accuracy to within $\pm 10\%$ of the true covariance scale. For operational systems, use ensemble-derived covariance estimates and update them regularly. The Resample regime's robustness to $B$ misestimation makes it preferable when covariance estimates are uncertain.
+\noindent
+ Validate $B$ accuracy to within $\pm 10\%$ of the true covariance scale. For operational systems, use ensemble-derived covariance estimates and update them regularly. The Resample regime's robustness to $B$ misestimation makes it preferable when covariance estimates are uncertain.
 
 \subsubsection{Observation Sparsity}
 
@@ -989,8 +990,8 @@ The Resample-GRU model exhibits graceful degradation as observation sparsity inc
 \item Beyond 50\% sparsity, performance degrades exponentially, confirming the necessity of reasonably dense observation networks.
 \item FixedMean diverges rapidly when sparsity reaches 25\%.
 \end{itemize}
-
-\textbf{Recommendation:} Maintain observation coverage above 75\% for reliable performance. If higher sparsity is unavoidable, use ensemble averaging or data augmentation techniques.
+\noindent
+Maintain observation coverage above 75\% for reliable performance. If higher sparsity is unavoidable, use ensemble averaging or data augmentation techniques.
 
 \subsubsection{Practical Summary}
 
@@ -1047,7 +1048,7 @@ This appendix section provides detailed visualizations and data structures refer
 \caption{(Appendix) Background statistics: covariance matrix $B$, its eigenvalue spectrum, and the $2\sigma$ ensemble contour in $X$--$Z$ space. These statistics quantify the uncertainty anisotropy of the Lorenz attractor.}
 \label{fig:app_background_stats}
 \end{figure}
-
+\newpage
 \noindent
 The data directory structure used in all experiments:
 
@@ -1234,12 +1235,14 @@ This appendix provides comprehensive visual diagnostics for attractor geometry p
 \label{fig:app_attractor_fixedmean_x}
 \end{subfigure}
 \hfill
+\newpage
 \begin{subfigure}[b]{0.32\textwidth}
 \includegraphics[width=\textwidth]{ATTRACTOR_GRID_FixedMean_xy.png}
 \caption{FixedMean, $xy$ mode}
 \label{fig:app_attractor_fixedmean_xy}
 \end{subfigure}
 \hfill
+\newpage
 \begin{subfigure}[b]{0.32\textwidth}
 \includegraphics[width=\textwidth]{ATTRACTOR_GRID_FixedMean_x2.png}
 \caption{FixedMean, $x^2$ mode}
@@ -1257,6 +1260,7 @@ This appendix provides comprehensive visual diagnostics for attractor geometry p
 \label{fig:app_attractor_resample_x}
 \end{subfigure}
 \hfill
+\newpage
 \begin{subfigure}[b]{0.32\textwidth}
 \includegraphics[width=\textwidth]{ATTRACTOR_GRID_Resample_xy.png}
 \caption{Resample, $xy$ mode}
