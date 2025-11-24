@@ -186,7 +186,7 @@ The \textbf{3D-Var} method frames the analysis problem as an optimization task, 
 $$
 a^* = \arg\min_a \left[ (a - b)^T B^{-1} (a - b) + (y - H a)^T R^{-1} (y - H a) \right]
 $$
-where $b$ is the prior background state, $y$ is the observation vector, $H$ is the observation operator that maps the state to the observed space, and $B$ and $R$ represent the prior and observation error covariances, respectively \cite{ai_da_fablet}. The solution requires computationally expensive iterative solvers or matrix inversions during inference, which poses a limitation for real-time or embedded applications.
+where $b$ is the prior background state, $y$ is the observation vector, $H$ is the observation operator that maps the state to the observed space, and $B$ and $R$ represent the prior and observation error covariances, respectively \cite{variational_da}. The solution requires computationally expensive iterative solvers or matrix inversions during inference, which poses a limitation for real-time or embedded applications.
 \subsection{The AI-Based Data Assimilation (AI-DA) Paradigm}
 The \textbf{AI-Based Data Assimilation (AI-DA)} framework, pioneered by Rucka et al., reframes the complex and computationally intensive DA analysis update as a supervised learning problem in functional approximation \cite{ai_da_fablet}. Instead of solving the variational optimization problem iteratively during inference, AI-DA proposes learning a parametric surrogate for the analysis functional ($\Phi$) via a neural network.
 \begin{figure}[H]
@@ -252,7 +252,7 @@ This structured comparison is essential for documenting the key project insights
 \section{Methods}
 The methodology deployed in this project is characterized by a high degree of control and systematic comparison, designed to isolate the performance contributions of architectural choice and background conditioning strategy within the AI-DA framework. All experiments were conducted within a unified pipeline to ensure complete traceability and comparability across model variants, observation modes, and noise regimes.
 \subsection{Common Evaluation Protocols}
-A standardized evaluation protocol was established for all models—MLP, GRU, LSTM, and the FixedMean baseline—adhering to the core philosophy of \textit{AI-Based Data Assimilation: Learning the Functional of Analysis Estimation} \cite{ai_da_fablet, neural_da_bocquet}. The central objective was to rigorously quantify each model’s ability to approximate the analysis functional ($\Phi$)—the mapping from noisy observations and prior information to the posterior analysis state that minimizes the 3D-Var cost function \cite{ai_da_fablet}. To counteract the effects of stochasticity inherent in chaotic systems and noise injection \cite{lorenz_1963}, a strict regime of performance averaging was implemented.
+A standardized evaluation protocol was established for all models—MLP, GRU, LSTM, and the FixedMean baseline—adhering to the core philosophy of \textit{AI-Based Data Assimilation: Learning the Functional of Analysis Estimation} \cite{ai_da_fablet, neural_da_bocquet}. The central objective was to rigorously quantify each model’s ability to approximate the analysis functional ($\Phi$)—the mapping from noisy observations and prior information to the posterior analysis state that minimizes the 3D-Var cost function \cite{variational_da}. To counteract the effects of stochasticity inherent in chaotic systems and noise injection \cite{lorenz_1963}, a strict regime of performance averaging was implemented.
 
 \subsubsection{Assimilation Evaluation Setup}
 Each model learns
@@ -1201,79 +1201,58 @@ This appendix provides comprehensive visual diagnostics for attractor geometry p
 \caption{(Appendix) Detailed comparison of global-normalized Hausdorff distances for Resample versus FixedMean regimes across architectures (MLP, GRU, LSTM) and noise levels. Left panel shows distributions at $\sigma=0.10$; right panel shows $\sigma=0.50$. Resample (blue) consistently outperforms FixedMean (red) across all architectures, with GRU and LSTM showing slight advantages in noise robustness. At higher noise ($\sigma=0.50$), FixedMean distributions broaden significantly, indicating geometric instability, while Resample remains tightly concentrated near $\tilde{H}_{\text{global}} \approx 0.32$. This confirms that architectural choice is secondary to regime selection: dynamic background updates are the primary driver of geometric fidelity.}
 \label{fig:app_attractor_metrics_detailed}
 \end{figure}
-
 \subsubsection*{A.3.3 Multi-Regime Attractor Grids}
+
+% =====================================================
+% BASELINE
+% =====================================================
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Baseline_x.png}
-\caption{Baseline, $x$ mode}
-\label{fig:app_attractor_baseline_x}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Baseline_xy.png}
-\caption{Baseline, $xy$ mode}
-\label{fig:app_attractor_baseline_xy}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Baseline_x2.png}
-\caption{Baseline, $x^2$ mode}
-\label{fig:app_attractor_baseline_x2}
-\end{subfigure}
-\caption{(Appendix) Attractor geometry for Baseline regime across three observation modes at multiple noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$). Each grid shows XY (left) and YZ (right) projections with truth (gray) and analysis (blue) trajectories overlaid. Baseline demonstrates partial geometric adherence but exhibits visible lobe imbalances and trajectory drift at higher noise, particularly for the $x^2$ mode where nonlinear observations obscure separatrix crossing cues.}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Baseline_x.png}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Baseline_xy.png}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Baseline_x2.png}
+\caption{(Appendix) Attractor geometry for the Baseline regime across three observation modes ($x$, $xy$, and $x^2$) and four noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$). Each grid contains XY and YZ projections with truth (gray) and analysis (blue) trajectories. Baseline maintains partial geometric fidelity at low noise but exhibits increasing lobe imbalance and drift at higher noise, particularly for the $x^2$ mode where nonlinear observations reduce separatrix information.}
 \label{fig:app_attractor_grid_baseline}
 \end{figure}
 
+% =====================================================
+% FIXEDMEAN
+% =====================================================
+
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_FixedMean_x.png}
-\caption{FixedMean, $x$ mode}
-\label{fig:app_attractor_fixedmean_x}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_FixedMean_xy.png}
-\caption{FixedMean, $xy$ mode}
-\label{fig:app_attractor_fixedmean_xy}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_FixedMean_x2.png}
-\caption{FixedMean, $x^2$ mode}
-\label{fig:app_attractor_fixedmean_x2}
-\end{subfigure}
-\caption{(Appendix) Attractor geometry for FixedMean regime across three observation modes. FixedMean exhibits severe geometric distortion at moderate to high noise levels, with analysis trajectories (blue) deviating substantially from truth (gray). Visible attractor escape is evident in several panels, where the analysis drifts toward fixed points or exhibits fragmented, non-chaotic behavior. Lobe occupancy discrepancies manifest as visibly unbalanced wing visitation, confirming the quantitative findings in Figure~\ref{fig:lobe_discrepancy}.}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_FixedMean_x.png}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_FixedMean_xy.png}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_FixedMean_x2.png}
+\caption{(Appendix) Attractor geometry for the FixedMean regime across observation modes. FixedMean displays substantial geometric degradation at moderate and high noise levels. Analysis trajectories (blue) deviate from truth (gray), often collapsing toward fixed points or producing fragmented, non-chaotic shapes. These distortions are consistent with the elevated lobe imbalance values observed in Fig.~\ref{fig:lobe_discrepancy}.}
 \label{fig:app_attractor_grid_fixedmean}
 \end{figure}
 
+
+% =====================================================
+% RESAMPLE
+% =====================================================
+
 \begin{figure}[H]
 \centering
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Resample_x.png}
-\caption{Resample, $x$ mode}
-\label{fig:app_attractor_resample_x}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Resample_xy.png}
-\caption{Resample, $xy$ mode}
-\label{fig:app_attractor_resample_xy}
-\end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.32\textwidth}
-\includegraphics[width=\textwidth]{ATTRACTOR_GRID_Resample_x2.png}
-\caption{Resample, $x^2$ mode}
-\label{fig:app_attractor_resample_x2}
-\end{subfigure}
-\caption{(Appendix) Attractor geometry for Resample regime across three observation modes. Resample demonstrates exceptional geometric fidelity across all modes and noise levels, with analysis trajectories (blue) closely tracking truth (gray) and preserving the double-lobe structure. Balanced wing visitation is visually evident, confirming near-zero lobe occupancy discrepancies. Even at $\sigma=1.00$ and under the challenging $x^2$ mode, Resample maintains chaotic coherence and proper separatrix crossings, validating dynamic background updates as essential for global topology preservation.}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Resample_x.png}
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Resample_xy.png}
+\end{figure}
+\begin{figure}[H]
+\includegraphics[width=\textwidth, keepaspectratio]{ATTRACTOR_GRID_Resample_x2.png}
+\caption{(Appendix) Attractor geometry for the Resample regime across observation modes. Resample shows excellent geometric fidelity: analysis trajectories (blue) closely follow truth (gray) across all noise levels. Balanced wing visitation and correct separatrix crossings confirm global topology preservation, even under the challenging $x^2$ mode and $\sigma=1.00$.}
 \label{fig:app_attractor_grid_resample}
 \end{figure}
 
-The composite grids provide compelling visual evidence for the quantitative metrics presented in Section~\ref{sec:4.5}. Resample grids show tight overlay between truth and analysis across all conditions, with both lobes equally populated and smooth transitions between wings. FixedMean grids reveal fragmented, distorted attractors with visible lobe bias and occasional escape to non-chaotic regimes. Baseline grids occupy an intermediate position, showing reasonable local alignment but with noticeable drift and incomplete double-lobe coverage at higher noise.
+% =====================================================
+% SUMMARY PARAGRAPH
+% =====================================================
+
+The composite grids provide compelling visual evidence supporting the quantitative metrics in
+Section~\ref{sec:4.5}. Resample consistently achieves the closest alignment between truth and analysis, with balanced wing visitation and stable geometric structure across all conditions. FixedMean produces the weakest performance, with fragmented attractors, lobe bias, and frequent geometric collapse at higher noise. Baseline lies between the two extremes, maintaining reasonable local alignment at low noise but failing to preserve full double-lobe coverage as noise increases.
 
 \newpage
 
