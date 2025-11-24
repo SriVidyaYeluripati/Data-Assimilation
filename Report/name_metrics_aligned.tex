@@ -579,19 +579,18 @@ Loss function & 3D-Var objective (Eq. above) \\
 \bottomrule
 \end{tabularx}
 \end{table}
-
+\vspace{-5cm}
 \subsubsection{Evaluation Pipeline}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=1.0\linewidth]{pipe_eval.png}
+\includegraphics[width=0.9\linewidth]{pipe_eval.png}
 \caption{Training and evaluation pipeline. The workflow encompasses Lorenz-63 simulation, observation corruption, background ensemble generation, neural network training via the 3D-Var objective, and post-assimilation evaluation against held-out test trajectories.}
 \label{fig:pipeline}
 \end{figure}
 
 Figure~\ref{fig:pipeline} illustrates the complete experimental workflow. Raw trajectories are generated from the Lorenz-63 system, corrupted with observation noise, and paired with ensemble-derived background statistics. Neural networks learn the analysis mapping by minimizing $\mathcal{L}_{\mathrm{DA}}$, and final models are evaluated on unseen test trajectories to assess generalization. Detailed data and results directory structures are documented in Appendix~\ref{sec:app_data}.
 
-\newpage
 
 \subsection{Convergence and Training Dynamics}
 \label{sec:4.2}
@@ -610,15 +609,15 @@ In contrast, the Resample regime demonstrates both rapid and robust convergence.
 \caption{Mean convergence envelopes across training regimes. The Resample regime (blue) achieves the fastest and most stable convergence, reducing loss to approximately 20\% of the initial value within the first epoch. FixedMean (orange) shows rapid initial descent but becomes unstable at high noise. Baseline (green) converges slowly and retains approximately 90\% of initial error by epoch 30. Shaded regions indicate standard deviation across observation modes and noise levels.}
 \label{fig:convergence_envelopes}
 \end{figure}
-
+\noindent
 Figure~\ref{fig:convergence_envelopes} quantifies these trends. The Resample regime achieves the sharpest descent, stabilizing near 20\% of initial loss within 5 epochs, while Baseline retains approximately 90\% of its initial error even after 30 epochs. FixedMean appears competitive in terms of loss reduction, but this does not translate to reliable test performance, as discussed below.
 
 \subsubsection{Handling Divergent Runs and Attractor Escape}
 
 A critical challenge in training AI-DA models for chaotic systems is \textit{attractor escape}, where the learned analysis trajectory departs from the chaotic manifold, causing RMSE to grow by orders of magnitude. This failure mode is particularly prevalent in the FixedMean regime at high noise. We classify a run as diverged if the post-assimilation RMSE exceeds $10\times$ the median RMSE for that configuration or if the normalized Hausdorff distance exceeds 10.
-
+\noindent
 In our experiments, observed divergence rates at $\sigma \geq 0.5$ were approximately 70--80\% for FixedMean and only 20--25\% for Resample. These failure rates underscore the fragility of static background priors under uncertainty. When summarizing results, we report mean $\pm$ standard deviation over non-diverged runs and explicitly state divergence rates. Robust statistics (median and IQR) that include all runs are provided in supplementary tables (Appendix~\ref{sec:app_training}).
-
+\noindent
 The Resample regime's superior robustness stems from its stochastic regularization: by continuously exposing the network to diverse background realizations, it learns a correction functional that generalizes beyond the specific training contexts, preventing overfitting to a single climatological prior.
 
 \subsubsection{Implications for Model Selection}
@@ -629,10 +628,10 @@ The comparative analysis establishes that:
 \item \textbf{FixedMean} converges quickly in loss but is fundamentally unreliable for operational use at $\sigma > 0.5$ due to high divergence rates.
 \item \textbf{Resample} balances fast convergence, low validation error, and robust generalization, making it the recommended regime for chaotic data assimilation.
 \end{enumerate}
-
+\noindent
 Detailed loss curves for individual configurations are provided in Appendix~\ref{sec:app_training}, including multi-panel grids showing convergence per observation mode and noise level. Section~\ref{sec:4.3} examines the post-assimilation accuracy and stability metrics in greater depth.
 
-\newpage
+
 
 \subsection{Resample Regime -- Accuracy and Stability}
 \label{sec:4.3}
@@ -649,7 +648,7 @@ Having established that the Resample regime provides the most stable training dy
 \end{figure}
 
 Figure~\ref{fig:resample_rmse} illustrates RMSE distributions for the three architectures. At low noise ($\sigma \leq 0.1$), all models achieve median RMSE values of approximately 4--5, with narrow interquartile ranges indicating consistent performance across runs. As noise increases, RMSE dispersion widens, particularly for LSTM, whose quartile range nearly doubles at $\sigma = 1.0$. This suggests stronger dependence on initialization and sample variability.
-
+\noindent
 In contrast, the GRU exhibits tighter distributions and fewer outliers, demonstrating more stable assimilation under data perturbation. The MLP retains the lowest mean RMSE for the $x$ mode (Table~\ref{tab:resample_stats}), but its stability declines in the nonlinear $x^2$ regime, where temporal modeling provides a clear advantage.
 
 \begin{table}[H]
@@ -673,7 +672,7 @@ $xy$  & GRU  & 7.788 & 1.150 & $-0.660$ & 0.960 \\
 \bottomrule
 \end{tabularx}
 \end{table}
-
+\noindent
 These results confirm that recurrent architectures (GRU, LSTM) generally outperform the MLP in nonlinear and coupled observation modes, where temporal context aids in resolving ambiguities and filtering noise.
 
 \subsubsection{Assimilation Gain: $\Delta$RMSE Analysis}
@@ -697,9 +696,9 @@ The observation mode strongly influences improvement patterns (see Appendix Figu
 \caption{Cross-run stability measured as the standard deviation of $\Delta$RMSE improvement across resampling runs for each architecture. GRU shows the highest variability (peak $\approx 1\%$ at intermediate noise) before stabilizing, while MLP exhibits the most consistent behavior ($\approx 0.3\%$ variance across all $\sigma$). LSTM falls between the two.}
 \label{fig:stability_noise}
 \end{figure}
-
+\noindent
 Figure~\ref{fig:stability_noise} quantifies run-to-run variability in assimilation gain. The MLP demonstrates the lowest variance ($\approx 0.3\%$) across all noise levels, indicating highly reproducible corrections despite its lack of temporal modeling. The GRU shows transient instability at moderate noise (peak $\approx 1\%$) before declining, while LSTM stabilizes at intermediate variance ($\approx 0.5\%$).
-
+\noindent
 These findings suggest that while recurrent architectures adapt better to temporal patterns, their higher parameter count and sensitivity to initialization introduce run-to-run variability. In contrast, the MLP's simplicity yields consistent (if less flexible) behavior.
 
 \subsubsection{Cross-Regime Correlation Analysis}
@@ -711,7 +710,7 @@ To assess whether improvements under Resample generalize across training regimes
 \item Weak positive correlation ($\approx 0.25$--$0.35$) between FixedMean and Resample gains, indicating partial transfer of architecture-specific advantages across regimes.
 \item Near-flat correlation between Baseline and Resample, implying that stochastic perturbations disrupt deterministic improvement patterns.
 \end{itemize}
-
+\noindent
 These findings confirm that while absolute improvement is regime-specific, the relative ranking of model robustness remains moderately preserved, underscoring the structural consistency of the learned assimilation operator.
 
 \subsubsection{Summary}
@@ -722,7 +721,7 @@ The Resample regime achieves:
 \item \textbf{Architecture-agnostic robustness} -- All three models (MLP, GRU, LSTM) converge to comparable performance, emphasizing the importance of stochastic regularization over architectural complexity.
 \item \textbf{Low cross-run variance} -- Assimilation gains remain bounded and reproducible, preventing catastrophic failures observed in FixedMean.
 \end{enumerate}
-
+\noindent
 These results establish Resample as the recommended training regime for operational AI-DA in chaotic systems. Section~\ref{sec:4.4} examines how observation mode structure interacts with these findings.
 
 \newpage
@@ -745,16 +744,16 @@ Figure~\ref{fig:obs_mode_rmse} reveals a clear hierarchy in observation effectiv
 \[
 xy < x < x^2
 \]
-
+\noindent
 The $xy$ mode provides dual observations that strongly constrain the state, yielding median RMSE near 4 with narrow quartiles even at $\sigma = 1.0$. The $x$ mode, observing only a single component, achieves slightly higher but still stable errors ($\approx 4$--5). In contrast, the $x^2$ mode exhibits significantly larger dispersion and RMSE values rising from $\approx 5$ to $\approx 10$ as noise increases. This degradation reflects the multiplicative error amplification inherent in nonlinear observation mappings: additive noise translates into multiplicative state uncertainty.
-
+\noindent
 The pattern confirms that \textit{information coupling outweighs observational nonlinearity} in enabling accurate assimilation. Coupled linear observations ($xy$) provide redundancy that resolves sign ambiguities and filters noise more effectively than increased measurement complexity.
 
 \subsubsection{Assimilation Improvement Across Modes}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{4_4b_delta_rmse_improvement.png}
+\includegraphics[width=0.8\textwidth]{4_4b_delta_rmse_improvement.png}
 \caption{$\Delta$RMSE improvement (before $-$ after assimilation) across observation modes as a function of noise $\sigma$. At low noise ($\sigma \leq 0.1$), all modes achieve substantial gains ($\Delta \approx 0.4$--0.5). As noise increases, $x$ and $xy$ retain nearly constant positive gains, while $x^2$ drops below zero for $\sigma \geq 0.1$, indicating slight degradation due to nonlinear error amplification.}
 \label{fig:obs_mode_delta}
 \end{figure}
@@ -765,19 +764,19 @@ Figure~\ref{fig:obs_mode_delta} quantifies the assimilation gain $\Delta$RMSE fo
 \item $x$ and $xy$ maintain nearly constant positive gains across all noise levels, demonstrating robustness to observational uncertainty.
 \item $x^2$ drops below zero for $\sigma \geq 0.1$, indicating that nonlinear observation mappings not only fail to improve the analysis but can actively degrade it under moderate noise.
 \end{itemize}
-
+\noindent
 This decline arises because the nonlinear transformation amplifies observation noise through cross-terms in the error covariance, making the inverse problem increasingly ill-posed. The relative flatness of $x$ and $xy$ curves demonstrates that linear and coupled observations preserve corrective efficacy even under substantial perturbations.
 
 \subsubsection{Cross-Architecture Performance by Mode}
 
 Different architectures exhibit mode-specific advantages (see Appendix Figure~\ref{fig:app_cross_arch_mode}). For the $xy$ mode, all three architectures converge to comparable performance ($\approx 4.0$ RMSE), indicating that temporal coupling dominates architectural differences. Under $x$, LSTM achieves the lowest mean RMSE ($\approx 3.7$), likely due to its gating structure filtering local fluctuations in univariate sequences. For $x^2$, the MLP shows a modest advantage ($\approx 6.7$ vs. $7$--8 for recurrent models), suggesting that static nonlinear mappings benefit from feedforward representations.
-
+\noindent
 These results highlight that \textit{architecture--mode alignment} matters more than overall capacity: recurrent networks excel when observations convey temporal context, while feedforward models adapt better to instantaneous nonlinear transformations.
 
 \subsubsection{Stability and Variance Across Modes}
 
 Run-to-run variability in assimilation gain, expressed as $\text{Std}(\Delta \text{RMSE})$, is lowest for $xy$ ($< 0.1$) across all noise levels, signifying stable convergence and reproducibility (see Appendix Figure~\ref{fig:app_variance_modes}). The $x$ mode shows slightly higher variance at low noise but decays with $\sigma$, indicating that noise averaging mitigates sensitivity. Conversely, $x^2$ exhibits pronounced variance (0.3--0.35), peaking near $\sigma = 0.5$, consistent with stochastic amplification through the nonlinear observation function.
-
+\noindent
 This implies that the instability in nonlinear modes is primarily \textit{data-driven}, not model-driven: the observation operator itself injects variability that the assimilation framework cannot fully suppress.
 
 \subsubsection{Summary}
@@ -788,7 +787,7 @@ The observation-mode analysis yields three main conclusions:
 \item \textbf{Architecture--mode interaction} -- Recurrent models (GRU, LSTM) benefit from temporally structured inputs ($xy$), while feedforward networks (MLP) better handle static nonlinearities ($x^2$).
 \item \textbf{Robustness under uncertainty} -- Even as $\sigma$ increases, $\Delta$RMSE remains bounded for linear modes, indicating a well-conditioned assimilation operator that generalizes across noise regimes.
 \end{enumerate}
-
+\noindent
 These findings inform the choice of observation strategy for operational AI-DA systems. Section~\ref{sec:4.5} examines how these effects propagate temporally through sequential state updates and attractor geometry preservation.
 
 \newpage
@@ -808,13 +807,13 @@ While previous sections focused on aggregated RMSE metrics, effective data assim
 \end{figure}
 
 Figure~\ref{fig:error_evolution} reveals stark differences in temporal error dynamics between regimes. The Resample regime achieves rapid error reduction within approximately 50 time steps (roughly one Lyapunov time for Lorenz-63), stabilizing at a low, steady-state error level across all noise settings. The error trajectory remains smooth and bounded, indicating that the learned correction functional successfully tracks the chaotic manifold.
-
+\noindent
 In contrast, FixedMean exhibits erratic behavior at moderate to high noise. Error oscillations grow in amplitude, and the trajectory fails to stabilize, often diverging entirely from the true attractor. This temporal instability reflects the fundamental limitation of static background priors: without stochastic updates, the model cannot adapt to the diverse realizations of chaotic dynamics encountered during assimilation.
 
 \subsubsection{Generalization to Unseen Trajectories}
 
 A critical requirement for successful AI-DA in chaotic systems is \textbf{generalization}---the capacity to accurately reconstruct trajectories entirely absent from the training dataset. If the network merely memorizes training dynamics, performance on unseen trajectories will collapse.
-
+\noindent
 To assess this, we evaluated all models on held-out test sets comprising trajectories never seen during training. The key observations confirm the necessity of dynamic background updates:
 
 \begin{enumerate}
@@ -852,39 +851,43 @@ Table~\ref{tab:xy_resample} quantifies these observations for the $xy$ mode, sho
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{4_5d_attractor_geometry.png}
-\caption{Attractor geometry preservation via phase space projections ($X$--$Y$, $Y$--$Z$ planes) under different noise levels. Resample regime (left panels) maintains tight alignment with the true Lorenz-63 double-wing structure even at $\sigma = 0.5$ (median normalized Hausdorff $\approx 0.07$), whereas FixedMean (right panels) exhibits severe distortion and drift (median Hausdorff $\approx 1.20$), often collapsing toward fixed points or breaking chaotic dynamics entirely.}
-\label{fig:attractor_geometry}
+\includegraphics[width=\textwidth]{fig_attractor_geometry_side_by_side.png}
+\caption{Phase–space projections (XY, YZ) for three assimilation regimes (Resample, FixedMean, Baseline) at two noise levels ($\sigma=0.1,0.5$). Each panel overlays truth (gray) and analysis (blue); inset text gives normalized Hausdorff distance $\tilde{H}$ where $\tilde{H}=H/\text{diam}(\mathcal{A}_{\text{truth}})$ and $H$ is the symmetric Hausdorff between truth and analysis trajectories (after downsampling to ≤6000 points). Resample maintains close geometric adherence ($\tilde{H}\approx0.32$) across noise, Baseline drifts moderately ($\tilde{H}\approx1.08$), and FixedMean exhibits substantial structural distortion ($\tilde{H}\approx1.48$–1.64).}
+\label{fig:attractor_geometry_panels}
 \end{figure}
 
-Figure~\ref{fig:attractor_geometry} visualizes the preservation of attractor geometry through phase space projections. The Resample regime successfully maintains the characteristic double-wing structure of the Lorenz-63 attractor across noise levels, with trajectories tightly constrained to the true manifold. Even at moderate noise ($\sigma = 0.1$), the learned analysis remains confined to the correct geometric structure in the $X$--$Y$ and $Y$--$Z$ planes.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{fig_attractor_geometry_metrics.png}
+\caption{(a) Distribution of normalized Hausdorff distances $\tilde{H}$ across noise levels ($\sigma\in\{0.05,0.1,0.5,1.0\}$) for each regime. (b) Scaling of $\tilde{H}$ with noise $\sigma$ (log scale). Medians (IQR): Resample $0.32$ (0.32–0.32), Baseline $1.08$ (1.08–1.09), FixedMean $1.50$ (1.42–1.55). Lower $\tilde{H}$ indicates better geometric adherence.}
+\label{fig:attractor_geometry_metrics}
+\end{figure}
 
-In contrast, FixedMean produces severely distorted phase portraits, with trajectories drifting away from the chaotic manifold toward fixed points or exhibiting fragmented, non-chaotic behavior. This geometric degradation explains the high RMSE and attractor escape observed in Section~\ref{sec:4.2}: the model learns an incorrect dynamical structure that fails to respect the underlying physics.
+Figure~\ref{fig:attractor_geometry_panels} and Figure~\ref{fig:attractor_geometry_metrics} together show that stochastic background resampling preserves local attractor geometry substantially better than either FixedMean or the Baseline approach. While earlier drafts reported an order‑of‑magnitude gap, updated normalized Hausdorff statistics indicate a ≈4.7× reduction (Resample vs FixedMean) and ≈3.4× reduction (Resample vs Baseline). The Baseline model, though not carefully regularized, maintains intermediate fidelity. The very tight IQR for Resample reflects near‑invariant geometric deviation across the tested noise levels; this is partly due to normalization by the diameter of the truncated truth segment and warrants caution when comparing to previous runs that used a full attractor diameter.
 
-Quantitatively, Resample achieves median normalized Hausdorff distance $\tilde{H} \approx 0.07$ (IQR 0.05--0.11), while FixedMean yields $\tilde{H} \approx 1.20$ (IQR 0.80--1.90). This order-of-magnitude difference confirms that stochastic background resampling is essential for geometric fidelity in chaotic assimilation.
+If full two‑lobe (“double‑wing”) preservation is to be emphasized, a longer trajectory window or inclusion of 3D projections should be added; the current panels visualize local manifold alignment rather than global lobe transitions.
 
-\subsubsection{Component-Wise Correction Patterns}
+\subsubsection{Component‑Wise Correction Patterns}
 
-Analysis of component-wise residuals ($\Delta x = \hat{x}^a - \bar{x}$) provides insight into how architectures handle the three Lorenz-63 state variables ($X$, $Y$, $Z$). The attractor's anisotropy leads to distinct correction requirements:
-
+Define correction $c(t)=x^{a}(t)-x^{b}(t)$ (analysis minus background) and analysis error $e(t)=x^{a}(t)-x^{\text{true}}(t)$. Residual plots (Appendix Fig.~\ref{fig:app_componentwise}) show:
 \begin{itemize}
-\item \textbf{$Z$ Component} -- All architectures exhibit smooth, monotonic correction of $Z$ residuals, reflecting the slow-decaying nature of initial $Z$ bias in the background. This is consistent with the Lorenz-63 dynamics where $Z$ evolves according to $\frac{dz}{dt} = xy - \beta z$.
-
-\item \textbf{$X$ and $Y$ Components} -- Instantaneous corrections for $X$ and $Y$ show rapid fluctuations corresponding to their chaotic behavior. Recurrent networks (GRU/LSTM) produce lower-variance residuals ($\sigma_{\text{res}} \approx 0.1$--0.2) compared to the MLP, demonstrating that temporal awareness smooths corrections and prevents high-frequency artifacts.
+\item \textbf{$Z$ component:} Smooth, low‑frequency corrections consistent with slower decay in $dz/dt=xy-\beta z$.
+\item \textbf{$X,Y$ components:} Higher‑variance, rapid adjustments tied to chaotic turnover; GRU/LSTM reduce correction variance ($\sigma_c\approx0.1$–0.2) relative to MLP, indicating temporal gating mitigates spurious high‑frequency updates.
 \end{itemize}
-
-Detailed component-wise residual plots are provided in Appendix Figure~\ref{fig:app_componentwise}.
 
 \subsubsection{Summary}
 
-The temporal and geometric analysis establishes that:
 \begin{enumerate}
-\item \textbf{Resample enables stable temporal evolution} -- Error converges rapidly and remains bounded, indicating successful trajectory tracking on the chaotic manifold.
-\item \textbf{Generalization to unseen data is critical} -- Resample models maintain low RMSE and correct attractor geometry on held-out test trajectories, while FixedMean frequently fails catastrophically.
-\item \textbf{Geometric fidelity is essential} -- Preservation of the Lorenz-63 double-wing structure (quantified via Hausdorff distance) is a necessary condition for physically consistent assimilation.
+\item Resample stabilizes geometric deviation (flat $\tilde{H}$ vs $\sigma$) while FixedMean amplifies distortion.
+\item Baseline provides a middle ground but lacks the precision needed for robust chaotic tracking.
+\item Geometric fidelity (low $\tilde{H}$) correlates with lower RMSE and sustained manifold adherence, supporting resampling as a structural, not incidental, requirement.
 \end{enumerate}
-
+\noindent
 These findings reinforce that stochastic background resampling is not merely a training trick but a fundamental requirement for learning robust, generalizable analysis functionals in chaotic systems. Section~\ref{sec:4.6} examines ablation studies to identify optimal design choices for operational implementation.
+
+
+
+
 
 \newpage
 
