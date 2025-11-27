@@ -71,18 +71,18 @@
 \tableofcontents
 \newpage
 \section*{Abstract}
-Data assimilation (DA) is central to state estimation in nonlinear dynamical systems, such as those in atmospheric and ocean sciences, where chaotic sensitivity to initial conditions limits forecasting accuracy. Classical methods, such as three-dimensional variational assimilation (3D-Var) and Ensemble Kalman Filters (EnKF), depend on linear-Gaussian assumptions and costly iterative optimization. The \textbf{AI-Based Data Assimilation (AI-DA)} framework learns $\Phi$ by \emph{minimizing a differentiable 3D-Var objective} directly (self‑supervised), using only observations, a background state, and their covariances at training time (no analysis labels).
+Data assimilation (DA) is central to state estimation in nonlinear dynamical systems, such as those in atmospheric and ocean sciences, where chaotic sensitivity to initial conditions limits forecasting accuracy. Classical methods, such as three-dimensional variational assimilation (3D-Var) and Ensemble Kalman Filters (EnKF), depend on linear-Gaussian assumptions and costly iterative optimization---3D-Var relies on iterative optimization of a cost function, while EnKF employs Gaussian approximations for the ensemble distribution. The \textbf{AI-Based Data Assimilation (AI-DA)} framework, following the AI-Var approach introduced by Fablet et al.\ \cite{ai_da_fablet}, learns the analysis functional $\Phi$ (a mapping from observations and background to the maximum a-posteriori state estimate) by \emph{minimizing a differentiable 3D-Var objective} directly (self-supervised), using only observations, a background state, and the covariance matrices $B$ (background error covariance) and $R$ (observation error covariance) at training time. Crucially, no re-analysis or ground truth labels are used during training; the true state is used only for offline evaluation.
 \medskip
 \noindent
 This study replicates and evaluates AI-DA on the canonical \textbf{Lorenz-63 system}, testing stability and generalization under increasing observation noise ($\sigma_{\mathrm{obs}} = 0.05$--$1.0$) and partial observability (\textit{X}, \textit{XY}, \textit{X}$^2$). Three neural architectures—a Multilayer Perceptron (MLP), Gated Recurrent Unit (GRU), and Long Short-Term Memory (LSTM)—are compared for their ability to approximate the analysis functional.
 \medskip
 \noindent
-Two key findings emerge: (1) recurrent models (GRU/LSTM) outperform MLPs, and (2) a \textbf{stochastic resampling regime} for background priors improves robustness. Test RMSE is computed against the (synthetic) true state used only for offline evaluation, preventing failures such as \textbf{Attractor Escape} observed under fixed priors. These results confirm that functional learning can successfully emulate data assimilation for low-dimensional chaotic systems, provided temporal modeling and stochastic regularization are incorporated.
+Two key findings emerge: (1) recurrent models (GRU/LSTM) outperform MLPs, and (2) a \textbf{stochastic resampling regime} for the employed background mean improves robustness. Performance is evaluated via test RMSE computed against the (synthetic) true state, which is used only for offline evaluation---no re-analysis labels are employed during training. The resampling strategy prevents failures such as \textbf{Attractor Escape} observed under fixed priors. These results suggest that the AI-Var scheme can be improved with network architectures catering to the nature of the DA problem; it can successfully emulate data assimilation for low-dimensional chaotic systems, provided temporal modeling and stochastic regularization are incorporated.
 \newpage
 \section{Introduction}
 \subsection{Motivation}
 \noindent
-State estimation in chaotic dynamical systems is a fundamental challenge in science and engineering, particularly in high-stakes fields such as numerical weather prediction (NWP) and oceanography. Chaotic systems, epitomized by the \textbf{Lorenz-63} atmospheric convection model, exhibit sensitive dependence on initial conditions, where even infinitesimal errors in the initial state or forecast grow exponentially over time, making long-term prediction practically impossible \cite{lorenz_1963}. To mitigate this divergence, \textbf{Data Assimilation (DA)} techniques optimally combine noisy observations with the model’s short-term forecast (the \textit{background} state) to produce a refined \textit{analysis} state, thereby constraining the trajectory to the true dynamical manifold and limiting forecast uncertainty.
+State estimation in chaotic dynamical systems---crucial for accurate forecasting---is a fundamental challenge in many disciplines in science and engineering, particularly in high-stakes fields such as numerical weather prediction (NWP) and oceanography. Chaotic systems, epitomized by the \textbf{Lorenz-63} atmospheric convection model, exhibit sensitive dependence on initial conditions, where even infinitesimal errors in the initial state or forecast grow exponentially over time, making long-term prediction practically impossible \cite{lorenz_1963}. To mitigate this divergence, \textbf{Data Assimilation (DA)} techniques optimally combine noisy observations with the model's short-term forecast (the \textit{background} state) to produce a refined \textit{analysis} state, thereby constraining the trajectory to the true dynamical manifold, reducing forecast uncertainty.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.4\linewidth]{lorenz.png}
@@ -90,13 +90,13 @@ State estimation in chaotic dynamical systems is a fundamental challenge in scie
 \label{fig:lorenz}
 \end{figure}
 \noindent
-Traditional DA methods rely on linearity and Gaussian error assumptions. Variational approaches, such as 3D-Var, minimize a cost function that balances background and observation information but require iterative solvers or matrix inversions and depend on accurate covariance specifications (B and R). The \textbf{AI-Based Data Assimilation (AI-DA)} framework replaces explicit variational optimization by learning a mapping $\Phi$ that minimizes a differentiable 3D‑Var objective directly (self‑supervised), using only observations, a background state, and their covariances (no analysis labels). 
+Traditional DA methods rely on knowledge of the physical model and generally assume linearity and Gaussian error distributions. Variational approaches, such as 3D-Var, minimize a cost function that balances background information and observations but require iterative optimization and depend on accurate specification of the covariance matrices $B$ (background error covariance) and $R$ (observation error covariance). Machine learning-based data assimilation, such as AI-Var as introduced in \cite{ai_da_fablet}, replaces explicit variational optimization by learning a mapping $\Phi$ (the analysis functional) that minimizes a differentiable 3D-Var objective directly (self-supervised), using only observations, a background state, and their covariances---no ground truth or re-analysis data are required for training.
 \noindent
 A critical challenge in this setting is that the true state ($x_{\text{true}}$) is unobservable, requiring the network to learn from surrogate analysis targets rather than from the ground truth. This work systematically investigates how different neural architectures—a memory-less Multilayer Perceptron (MLP) versus recurrent models (GRU, LSTM)—approximate the analysis functional, testing the hypothesis that temporal sequence modeling enhances stability and coherence in chaotic, partially observed systems.
 
 \newpage
 \subsection{Project Goals}
-The central aim of this project is to develop and rigorously evaluate a machine learning-based data assimilation framework, utilizing the Lorenz-63 system as a demanding testbed. We specifically seek to \textbf{train neural network models to learn the analysis functional ($\Phi$)}—the state correction given a background and observations—and evaluate their performance across systematic variations in the experimental setup.
+The central aim of this project is to develop and rigorously evaluate a machine learning-based data assimilation framework for the AI-Var approach, utilizing the Lorenz-63 system as a demanding testbed via a simulation study. We specifically seek to \textbf{train neural network models to learn the analysis functional ($\Phi$)}---the maximum a-posteriori (MAP) state estimate given background information and observations---and evaluate their performance across systematic variations in the experimental setup.
 
 \begin{table}[H]
 \centering
@@ -128,7 +128,7 @@ Key project goals, designed to provide a comprehensive understanding of the meth
 \begin{enumerate}
 \item \textbf{Systematic Architectural Benchmarking:} To investigate the impact of temporal context on assimilation performance, we compare three architectures—MLP, GRU, and LSTM—on identical tasks, identifying whether recurrent models offer an advantage over a memory-less MLP in this sequential filtering problem.
 
-\item \textbf{Evaluation Across Multiple Observability Conditions:} The learned analysis is tested under three distinct observation scenarios: linear single-variable (\textit{x} mode), multivariate (\textit{xy} mode), and the challenging nonlinear observation ($x^2$ mode) to assess how the networks handle partial and nonlinear data.
+\item \textbf{Evaluation Across Multiple Observability Conditions:} The learned analysis is tested under two distinct partial observation operators and one non-linear observation operator: linear single-variable (\textit{x} mode, $h(x) = x_1$), multivariate (\textit{xy} mode, $h(x) = (x_1, x_2)$), and the challenging nonlinear observation ($x^2$ mode, $h(x) = x_1^2$) to assess how the networks handle partial and nonlinear data.
 \item \textbf{Rigorously Testing Noise Robustness:} We evaluate performance across a wide range of observation noise levels ($\sigma=0.05, 0.1, 0.5, 1.0$). The explicit goal is to take the strongest models (GRU/LSTM) and \textbf{"try to break them"} by systematically increasing noise to see "when a method breaks" \cite{lorenz_1963}.
 \item \textbf{Quantifying Generalized Performance:} Due to the inherent stochasticity (noise addition) and chaotic dynamics, performance must be derived from \textbf{averages} across multiple runs or test sets (e.g., 500 held-out test trajectories). This ensures that the reported results reflect the *average* performance for this *type* of problem in general, and not one specific stochastic instance \cite{lorenz_1963}.
 \item \textbf{Comprehensive Error Analysis:} We measure error using the Root Mean Square Error (RMSE) and quantify the error in \textbf{all three state components} (X, Y, Z), as the model must accurately recover unobserved dimensions (like Z).
@@ -188,12 +188,12 @@ a^* = \arg\min_a \left[ (a - b)^T B^{-1} (a - b) + (y - H a)^T R^{-1} (y - H a) 
 $$
 where $b$ is the prior background state, $y$ is the observation vector, $H$ is the observation operator that maps the state to the observed space, and $B$ and $R$ represent the prior and observation error covariances, respectively \cite{variational_da}. The solution requires computationally expensive iterative solvers or matrix inversions during inference, which poses a limitation for real-time or embedded applications.
 \subsection{The AI-Based Data Assimilation (AI-DA) Paradigm}
-The \textbf{AI-Based Data Assimilation (AI-DA)} framework, pioneered by Rucka et al., reframes the complex and computationally intensive DA analysis update as a supervised learning problem in functional approximation \cite{ai_da_fablet}. Instead of solving the variational optimization problem iteratively during inference, AI-DA proposes learning a parametric surrogate for the analysis functional ($\Phi$) via a neural network.
+The \textbf{AI-Based Data Assimilation (AI-DA)} framework, an adaptation of the AI-Var framework introduced in \cite{ai_da_fablet}, reframes the complex and computationally intensive DA analysis update as a learning problem in functional approximation. Instead of solving the variational optimization problem iteratively during inference, AI-DA proposes learning a parametric surrogate for the analysis functional ($\Phi$)---the maximum a-posteriori (MAP) state estimate---via a neural network.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\linewidth]{classical DA.png}
-\caption{ 3D-Var Functional/AI-DA Concept}
-\label{fig:lorenz}
+\caption{3D-Var Functional/AI-DA Concept. The analysis functional $\Phi$ maps inputs (observations $y$, background $\bar{x}$, and covariances $B$, $R$) to the analysis state $\hat{x}^a$. Figure adapted from \cite{ai_da_fablet}.}
+\label{fig:aida_concept}
 \end{figure}
 \medskip
 \noindent
@@ -202,28 +202,28 @@ The core objective is to learn $\Phi$ so that its output \emph{minimizes} the 3D
 \hat{x}^a = \Phi(y, \bar{x}, H, R, B),\quad
 J(x)=\tfrac12(x-\bar{x})^\top B^{-1}(x-\bar{x})+\tfrac12(Hx-y)^\top R^{-1}(Hx-y).
 \]
-Training is \emph{self‑supervised}: we backpropagate through $J(\hat{x}^a)$; no analysis labels are required.
+Training is \emph{self-supervised}: we backpropagate through $J(\hat{x}^a)$; no analysis labels are required. While training with re-analysis data is a frequent option in other approaches, we instead investigate self-supervised training.
 This machine learning approach offers several critical advantages:
 \begin{enumerate}
 \item \textbf{Inference Efficiency:} Once trained, the network can infer the analysis state through a single forward pass, thereby eliminating the need for iterative numerical solvers and speeding up the analysis cycle significantly.
 \item \textbf{Nonlinear Approximation:} Neural networks have the capacity to learn complex, non-linear relationships directly from data, potentially capturing dynamics that might be overlooked or simplified by traditional linearized variational methods.
 \end{enumerate}
 \subsubsection*{The Critical Constraint: Absence of True Ground Truth}
-A crucial element is that the true state $x_{\text{true}}$ is \textbf{unobservable} in realistic DA. Training is therefore self-supervised: we backpropagate through the 3D-Var cost $J(\hat{x}^a)$ and do not use analysis labels ($a^\star$). Truth and $a^\star$ are computed only for offline evaluation and diagnostics (e.g., RMSE and geometry metrics). This constraint means the network must learn to reconstruct trajectories based on observations and the statistical information provided by the background state and its error covariance.
+A crucial element is that the true state $x_{\text{true}}$ is \textbf{unobservable} in realistic DA. Training is therefore self-supervised: we backpropagate through the 3D-Var cost $J(\hat{x}^a)$ and do not use analysis labels ($a^\star$). The true state (available here due to the nature of the simulation study) and the optimal analysis $a^\star$ are computed only for offline evaluation and diagnostics (e.g., RMSE and geometry metrics). This constraint means the network must learn to reconstruct trajectories based on observations and the background information provided by the background state and its error covariance. To provide available knowledge about the underlying system, we employ the covariance matrices $B$ and $R$ as prior knowledge.
 
 \subsection{The Lorenz-63 Testbed and Problem Formulation}
-To rigorously evaluate the viability and limitations of the AI-DA framework, this project employs the \textbf{Lorenz-63 system} as a canonical testbed \cite{lorenz_1963}. Introduced by Edward Lorenz in 1963, this three-dimensional system models atmospheric convection and is defined by the set of coupled ordinary differential equations:
+To rigorously evaluate the viability and limitations of the AI-DA framework, this project employs the \textbf{Lorenz-63 system} as a canonical testbed \cite{lorenz_1963}. Introduced by Edward Lorenz in 1963, this three-dimensional system models atmospheric convection and is defined by the set of coupled ordinary differential equations, exhibiting stable chaotic behavior:
 $$
 \frac{dx}{dt} = \sigma (y - x), \quad \frac{dy}{dt} = x(\rho - z) - y, \quad \frac{dz}{dt} = xy - \beta z.
 $$
 The standard parameters used are $\sigma = 10$, $\rho = 28$, and $\beta = 8/3$. The system exhibits chaotic dynamics characterized by the double-wing attractor, making it a demanding benchmark for testing state estimation methods due to its sensitive dependence on initial conditions.
 \medskip
 \noindent
-The problem formulation involves estimating the full 3D state vector $\mathbf{x} = (x, y, z)$ from \textbf{partial and noisy observations}. The system is evaluated under three distinct observability conditions to probe information completeness and nonlinearity:
+The problem formulation involves estimating the full 3D state vector $\mathbf{x} = (x, y, z)$ from \textbf{partial and noisy observations}. The system is evaluated under two partial linear observation operators and one non-linear observation operator to probe information completeness and nonlinearity:
 \begin{itemize}
-\item \textbf{Linear Single-Variable Mode (\textit{x}):} Only the first component $x$ is observed ($H(\mathbf{x})=[x]$).
-\item \textbf{Multivariate Mode (\textit{xy}):} Two linear components are observed ($H(\mathbf{x})=[x, y]$).
-\item \textbf{Nonlinear Mode (\textit{x²}):} A nonlinear transform of the state is observed ($H(\mathbf{x})=[x^2]$), introducing complexity and ill-posedness.
+\item \textbf{Linear Single-Variable Mode (\textit{x}):} Only the first component is observed: $h(\mathbf{x})=x_1$.
+\item \textbf{Multivariate Mode (\textit{xy}):} Two linear components are observed: $h(\mathbf{x})=(x_1, x_2)$.
+\item \textbf{Nonlinear Mode (\textit{x²}):} A nonlinear transform of the state is observed: $h(\mathbf{x})=x_1^2$, introducing complexity and ill-posedness.
 \end{itemize}
 In all cases, observations are corrupted by Gaussian noise ($\epsilon \sim \mathcal{N}(0, \sigma^2 I)$) across four noise levels ($\sigma \in \{0.05, 0.10, 0.50, 1.00\}$) \cite{lorenz_1963}. The models must recover the full 3D state, including the unobserved components (like $z$), based on these limited and uncertain inputs.
 \subsubsection*{Architectural Comparison and Regimes}
@@ -251,7 +251,13 @@ This structured comparison is essential for documenting the key project insights
 \newpage
 \section{Methods}
 \label{sec:Methods}
-The methodology deployed in this project is characterized by a high degree of control and systematic comparison, designed to isolate the performance contributions of architectural choice and background conditioning strategy within the AI-DA framework. All experiments were conducted within a unified pipeline to ensure complete traceability and comparability across model variants, observation modes, and noise regimes.
+
+\subsection*{Notation}
+Throughout this paper, we denote the learned analysis functional by $\Phi(\cdot)$; in code, $f_\theta$ denotes the parametric neural network representation of $\Phi$. The covariance matrices $B$ (background error covariance) and $R$ (observation error covariance) are introduced formally in Section~\ref{sec:Methods} and used consistently throughout. Training is self-supervised on the differentiable 3D-Var objective; no re-analysis or analysis labels are used. The synthetic true state $x_{\text{true}}$ is used only for offline evaluation (test RMSE).
+
+\medskip
+\noindent
+The methodology deployed in this project is characterized by a high degree of control and systematic comparison, designed to isolate the performance contributions of architectural choice and background conditioning strategy within the sequential adaptation of the AI-Var framework. All experiments were conducted within a unified pipeline to ensure complete traceability and comparability across model variants, observation modes, and noise regimes.
 \subsection{Common Evaluation Protocols}
 A standardized evaluation protocol was established for all models—MLP, GRU, LSTM, and the FixedMean baseline—adhering to the core philosophy of \textit{AI-Based Data Assimilation: Learning the Functional of Analysis Estimation} \cite{ai_da_fablet, neural_da_bocquet}. The central objective was to rigorously quantify each model’s ability to approximate the analysis functional ($\Phi$)—the mapping from noisy observations and prior information to the posterior analysis state that minimizes the 3D-Var cost function \cite{variational_da}. To counteract the effects of stochasticity inherent in chaotic systems and noise injection \cite{lorenz_1963}, a strict regime of performance averaging was implemented.
 
@@ -295,7 +301,7 @@ When we explicitly compare methods to the FixedMean baseline we report:
 \;=\;100\cdot\left(1-\frac{\mathrm{RMSE}_\text{model}}{\mathrm{RMSE}_\text{FixedMean}}\right).
 \]
 
-\noindent\textit{Note:} All figures and tables use the named metric in their captions; when a secondary metric is shown this is explicitly stated in the caption. We report mean~$\pm$~std in the main text and provide median and IQR for quantities affected by outliers (e.g., when attractor escape occurs).
+\noindent\textit{Note:} All figures and tables use the named metric in their captions; when a secondary metric is shown this is explicitly stated in the caption. We report mean~$\pm$~std in the main text and provide median and IQR for quantities affected by outliers (e.g., when attractor escape occurs). Also note: a high improvement percentage is better---e.g., 90\% improvement refers to $\mathrm{RMSE}_a$ being 1/10 of $\mathrm{RMSE}_b$.
 
 \subsubsection{Temporal Coherence and Trajectory Fidelity Protocols}
 Due to the sensitive dependence on initial conditions characteristic of the Lorenz-63 system, success demands that the learned analysis functional ($\Phi$) must continuously constrain the estimated trajectory to the true chaotic manifold, preventing the exponential growth of errors (Lyapunov instability) \cite{lorenz_1963}.
@@ -357,18 +363,18 @@ The problem involves estimating the full 3D state vector $\mathbf{x} = (x, y, z)
 \label{fig:placeholder}
 \end{figure}
 \begin{itemize}
-\item \textbf{Linear Single-Variable Mode ($x$):} Observing only the first component, $H(\mathbf{x})=[x]$.
-\item \textbf{Multivariate Mode ($xy$):} Observing two linear components, $H(\mathbf{x})=[x, y]$, providing increased informational coupling.
-\item \textbf{Nonlinear Mode ($x^2$):} Observing a nonlinear transform of the state, $H(\mathbf{x})=[x^2]$. This mode introduces significant ill-posedness, as the operator removes sign information and amplifies noise.
+\item \textbf{Linear Single-Variable Mode ($x$):} Observing only the first component, $h(\mathbf{x})=x_1$.
+\item \textbf{Multivariate Mode ($xy$):} Observing two linear components, $h(\mathbf{x})=(x_1, x_2)$, providing increased informational coupling. The $xy$ mode provides the most information.
+\item \textbf{Nonlinear Mode ($x^2$):} Observing a nonlinear transform of the state, $h(\mathbf{x})=x_1^2$. This mode introduces significant ill-posedness, as the operator removes sign information and amplifies noise. The $x^2$ mode provides the least amount of information, followed by $x$, and $xy$ provides the most.
 \end{itemize}
-In all modes, observations were corrupted by additive Gaussian noise ($\epsilon \sim \mathcal{N}(0, \sigma^2 I)$). To thoroughly stress-test the method and determine "when a method breaks" \cite{lorenz_1963}, four distinct noise levels were evaluated: $\sigma \in \{0.05, 0.10, 0.50, 1.00\}$ \cite{lorenz_1963}.
+In all modes, observations are corrupted by additive Gaussian noise ($\epsilon \sim \mathcal{N}(0, \sigma^2 I)$) to create the artificial observations from the ground-truth trajectory. To thoroughly stress-test the method and determine "when a method breaks" \cite{lorenz_1963}, four distinct noise levels were evaluated: $\sigma \in \{0.05, 0.10, 0.50, 1.00\}$ \cite{lorenz_1963}.
 \subsubsection{Generation of Background and Analysis States}
 
 For each ground-truth trajectory, background priors were generated from an independent climatological ensemble. Concretely, we first generated a
 large ensemble of states by sampling from long Lorenz-63 trajectories (ensemble size $E$). For the Resample regime, at each training minibatch we sampled
-$m$ ensemble members (with replacement) and computed the batch background mean $\bar{x}$ and empirical covariance $B$ from those $m$ members.
+$m$ ensemble members (with replacement) and computed the batch background mean $\bar{x}_t$ (varying with each batch) and empirical covariance $B$ from those $m$ members, where the background mean is computed from a resampled ensemble.
 To ensure numerical stability, $B$ was regularized as $B \leftarrow B + \varepsilon I$ with $\varepsilon = 10^{-6}$. For the FixedMean regime we used the climatological
-mean $\bar{x}_{\text{clim}}$ (computed from the full ensemble) and the corresponding climatological covariance $B_{\text{clim}}$ as a static prior
+mean $\bar{x}_B$ (the static average over all available training runs) and the corresponding climatological covariance $B_{\text{clim}}$ as a static prior
  \cite{ensemble_methods}.
 \begin{figure}[H]
 \centering
@@ -406,7 +412,7 @@ LSTM & Single-layer LSTM(64) over $y_{t-L+1:t}$; concat $[\bar{x},h_t]$ + MLP he
 \begin{enumerate}
 \item \textbf{Diagnostic Control: Baseline MLP (No-Mean)}
  The Baseline MLP is intentionally smaller (hidden width = 32) and is used as a lightweight diagnostic control; the main MLP/GRU/LSTM models use a 64-dimensional hidden representation for fair comparison of primary models.
-This model serves as the \textbf{necessary baseline comparison} and diagnostic control, to introduce the problem and quantify the benefit of prior information \cite{ai_da_fablet}. The Baseline MLP is a minimal, memory-less feedforward network that \textbf{excludes all prior background information} ($\bar{x}$ or $B$). It learns a direct mapping from the most recent observation ($y_t$) to the analysis state: $\hat{x}^a = f_\theta(y_t)$ \cite{ai_da_fablet}. The architecture comprises two linear layers with a hidden dimension of 32 and uses the \textbf{Tanh activation function}. Performance results confirm that relying solely on observation information yields limited generalization, particularly under high noise, confirming that background priors are critical for robust AI-DA \cite{kalman_1960}.
+This model serves as the \textbf{necessary baseline comparison} and diagnostic control, to introduce the problem and quantify the benefit of prior information \cite{ai_da_fablet}. The Baseline MLP is a minimal, memory-less feedforward network that \textbf{excludes all prior background information} ($\bar{x}$ or $B$). It learns a direct mapping from the most recent observation ($y_t$) to predict the analysis state $\hat{x}^a = f_\theta(y_t)$ \cite{ai_da_fablet}. The architecture comprises two linear layers with a hidden dimension of 32 and uses the \textbf{Tanh activation function}. Performance results confirm that relying solely on observation information yields limited generalization, particularly under high noise, confirming that background priors are critical for robust AI-Var \cite{kalman_1960}.
 \item \textbf{Multilayer Perceptron (MLP)}
 The primary MLP extends the baseline by explicitly concatenating the background mean ($\bar{x}$) and the last observation ($y_t$). It is formulated to predict an additive correction ($\Delta x$) to the background state: $\hat{x}^a = \bar{x} + \Delta x = f_\theta([\bar{x}, y_t])$ \cite{ai_da_fablet}. This architecture, using ReLU hidden layers of width 64, serves as the simplest model capable of approximating the 3D-Var update in a single forward pass and provides a lightweight reference. It was observed to be "surprisingly good" in certain contexts, particularly in the resampling regime \cite{neural_da_bocquet}.
 \item \textbf{Gated Recurrent Unit (GRU)}
@@ -1031,7 +1037,7 @@ Table~\ref{tab:recommendations} summarizes the key operational guidelines derive
 \newpage
 \section{Conclusion and Outlook}
 \vspace{-0.3cm}
-This study investigated the use of neural network architectures for data assimilation in the Lorenz–63 system, focusing on how temporal modeling and ensemble-based strategies support the reconstruction of chaotic trajectories. Experiments with feed-forward and recurrent architectures under fixed and resampled background conditions showed that models capturing temporal dependencies, such as Gated Recurrent Units (GRU) and Long Short-Term Memory (LSTM) networks, consistently outperformed the simpler Multi-Layer Perceptron (MLP). The GRU exhibited particularly stable and generalizable learning, indicating that its gating mechanisms effectively reduce overfitting and improve adaptability with limited data. Resampling the ensemble mean during training enhanced reconstruction quality by better representing evolving background uncertainty and the system’s stochasticity, whereas the fixed-mean formulation often produced divergent or flattened trajectories. While a hypothetical training-time penalty toward the true state (a ``truth-anchor'') could improve stability in contrived diagnostics, such an approach is not realistic for operational data assimilation as the true state is unavailable. No truth-anchor was used in the experiments reported here; all training minimized the self-supervised 3D-Var objective without access to $x_{\mathrm{true}}$.
+This study aims to contribute to the investigation of neural network architectures for data assimilation in the Lorenz–63 system, focusing on how temporal modeling and ensemble-based strategies support the reconstruction of chaotic trajectories. Experiments with feed-forward and recurrent architectures under fixed and resampled background conditions showed that models capturing temporal dependencies, such as Gated Recurrent Units (GRU) and Long Short-Term Memory (LSTM) networks, consistently outperformed the simpler Multi-Layer Perceptron (MLP) in terms of performance when utilizing AI-Var in dynamical systems. The GRU exhibited particularly stable and generalizable learning, indicating that its gating mechanisms effectively reduce overfitting and improve adaptability with limited data. Resampling the background mean during training enhanced reconstruction quality by better representing evolving background uncertainty and the system’s stochasticity, whereas the fixed-mean formulation often produced divergent or flattened trajectories. While a hypothetical training-time penalty toward the true state (a ``truth-anchor'') could improve stability in contrived diagnostics, such an approach is not realistic for operational data assimilation as the true state is unavailable. No truth-anchor was used in the experiments reported here; all training minimized the self-supervised 3D-Var objective without access to $x_{\mathrm{true}}$.
 This work emphasizes the need for rigorous experimental design that clearly separates training, validation, and testing while accounting for stochastic variability. Because single-run evaluations can misrepresent model performance, future studies should average results over multiple randomized trajectories to obtain statistically meaningful error estimates and robust performance metrics. Further exploration under varying observation noise levels has shown that increasing noise impacts architectures differently; thus, a sensitivity analysis across several amplitudes (\(\sigma = 0.05, 0.1, 0.5, 1.0\)) will help identify thresholds at which assimilation accuracy declines. Extending the framework to higher-dimensional systems, such as Lorenz–96, would test its scalability and applicability to complex geophysical settings, while incorporating varied observation operators and levels of partial observability would more closely emulate realistic atmospheric and oceanic assimilation conditions.Looking ahead, integrating data-driven models with traditional assimilation techniques presents a promising research direction. Embedding recurrent neural networks within hybrid frameworks such as the Ensemble Kalman Filter (EnKF) or four-dimensional variational assimilation (4D-Var) could merge physical consistency with adaptive learning, improving both accuracy and interpretability. Generative extensions like Variational Autoencoders or generative LSTMs further enable probabilistic trajectory estimation and explicit uncertainty quantification alongside deterministic prediction. Overall, this study provides methodological and conceptual insights at the intersection of machine learning and data assimilation, showing that the complementary strengths of temporal representation and stochastic resampling form a foundation for future hybrid and probabilistic frameworks capable of capturing the balance between determinism and chaos in nonlinear dynamical systems.
 
 \newpage
