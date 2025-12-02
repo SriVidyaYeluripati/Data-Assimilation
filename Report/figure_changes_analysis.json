@@ -1,0 +1,146 @@
+[
+  {
+    "figure_name": "attractor_metrics_resample_fixedmean.png",
+    "tex_location": "main (3).tex: line 868",
+    "page_in_pdf": 29,
+    "hans_comment_id": 105,
+    "hans_comment": "can you make it a log plot?",
+    "issue_type": "log-scale request",
+    "current_caption": "Global-normalized Hausdorff distances for Resample and FixedMean regimes at four noise levels...",
+    "required_changes": [
+      "Regenerate figure with logarithmic y-axis scale",
+      "Update axis labels if needed to reflect log scale"
+    ],
+    "priority": "MEDIUM",
+    "scripts_to_check": ["results/plotting scripts", "src/visualization"],
+    "status": "NEEDS_IMPLEMENTATION"
+  },
+  {
+    "figure_name": "4_5b_error_evolution_profiles.png",
+    "tex_location": "main (3).tex: line 806",
+    "page_in_pdf": 31,
+    "hans_comment_id": 112,
+    "hans_comment": "what mode",
+    "issue_type": "missing caption information - observation mode",
+    "current_caption": "Temporal evolution of Euclidean error over the assimilation window for FixedMean and Resample regimes at different noise levels...",
+    "required_changes": [
+      "Add observation mode specification to caption (e.g., 'in the xy observation mode' or 'across all observation modes')"
+    ],
+    "priority": "HIGH",
+    "suggested_fix": "Add to caption: '...for FixedMean and Resample regimes in the [xy/x/all] observation mode at different noise levels.'",
+    "status": "NEEDS_CAPTION_UPDATE"
+  },
+  {
+    "figure_name": "lobe_occupancy_diff_heatmap.png",
+    "tex_location": "main (3).tex: line 889",
+    "page_in_pdf": 32,
+    "hans_comment_id": 113,
+    "hans_comment": "what noise level",
+    "issue_type": "missing caption information - noise level already present",
+    "current_caption": "Lobe occupancy discrepancy for all regimes and observation modes across four noise levels (σ ∈ {0.05, 0.10, 0.50, 1.00})...",
+    "required_changes": [
+      "Caption already includes noise levels - verify if Hans meant a different figure on page 32",
+      "Possibly consolidate or clarify which specific noise level is being highlighted"
+    ],
+    "priority": "LOW",
+    "note": "Caption already specifies all four noise levels; may need discussion with Hans",
+    "status": "NEEDS_CLARIFICATION"
+  },
+  {
+    "figure_name": "attractor_metrics_resample_fixedmean.png (or related figure)",
+    "tex_location": "main (3).tex: line 868 or nearby",
+    "page_in_pdf": 32,
+    "hans_comment_id": 114,
+    "hans_comment": "which model is in the figure?",
+    "issue_type": "missing caption information - model/architecture",
+    "current_caption": "Global-normalized Hausdorff distances for Resample and FixedMean regimes...",
+    "required_changes": [
+      "Add model/architecture specification to caption (e.g., 'GRU architecture' or 'all architectures aggregated')"
+    ],
+    "priority": "HIGH",
+    "suggested_fix": "Add to caption: '...using the [GRU/all architectures] architecture(s).'",
+    "status": "NEEDS_CAPTION_UPDATE"
+  },
+  {
+    "figure_name": "Unknown - page 29 results figure",
+    "tex_location": "main (3).tex: around lines 647-759 (results section)",
+    "page_in_pdf": 29,
+    "hans_comment_id": 107,
+    "hans_comment": "something is wrong here",
+    "issue_type": "unclear error - possible incorrect plot or labeling",
+    "current_caption": "Unknown - needs identification",
+    "required_changes": [
+      "Identify which figure Hans is referring to on page 29",
+      "Check for: incorrect data, wrong axis labels, mislabeled legend, inconsistent values",
+      "Compare with source data/scripts"
+    ],
+    "priority": "HIGH",
+    "note": "Hans flagged an error but did not specify what is wrong; requires discussion",
+    "status": "NEEDS_DISCUSSION"
+  },
+  {
+    "figure_name": "Multiple plots on page 30",
+    "tex_location": "main (3).tex: lines 740-759 (observation mode section)",
+    "page_in_pdf": 30,
+    "hans_comment_id": 111,
+    "hans_comment": "Maybe keep one plot here",
+    "issue_type": "plot consolidation suggestion",
+    "current_caption": "Multiple figures: 4_4a_post_assimilation_rmse.png and 4_4b_delta_rmse_improvement.png",
+    "required_changes": [
+      "Consider consolidating 4_4a and 4_4b into a single multi-panel figure",
+      "Or remove one plot if redundant"
+    ],
+    "priority": "LOW",
+    "suggested_fix": "Merge into single figure with subplots (a) RMSE distributions and (b) Delta RMSE improvement, or keep only the most informative one",
+    "status": "NEEDS_DISCUSSION"
+  },
+  {
+    "figure_name": "classical DA.png",
+    "tex_location": "main (3).tex: line 194",
+    "page_in_pdf": 10,
+    "hans_comment_id": 57,
+    "hans_comment": "give the source for this image and show where exactly phi is here",
+    "issue_type": "missing citation and Φ label",
+    "current_caption": "3D-Var Functional/AI-DA Concept",
+    "required_changes": [
+      "Add citation/source for the figure",
+      "Add annotation showing where Φ appears in the diagram",
+      "Update caption to explain Φ mapping"
+    ],
+    "priority": "MEDIUM",
+    "suggested_fix": "Update caption: 'Figure adapted from [cite]. The analysis functional Φ maps the background state and observations to the analysis state (shown as [specific element]).'",
+    "status": "NEEDS_CAPTION_UPDATE"
+  },
+  {
+    "figure_name": "4_6_4_B_scaling_sensitivity.png",
+    "tex_location": "main (3).tex: line 1390 (Appendix)",
+    "page_in_pdf": 48,
+    "hans_comment_id": 118,
+    "hans_comment": "no control, maybe test smaller steps",
+    "issue_type": "methodology suggestion - finer step sizes",
+    "current_caption": "Effect of background covariance (B) scaling factor (λ) on post-assimilation RMSE...",
+    "required_changes": [
+      "Consider regenerating with finer step sizes (Δλ = 0.05 instead of 0.1)",
+      "Add note about practical limitation"
+    ],
+    "priority": "LOW",
+    "note": "Future work suggestion; not critical for current revision",
+    "status": "FUTURE_WORK"
+  },
+  {
+    "figure_name": "4_6_5a_B_sensitivity_regimes.png",
+    "tex_location": "main (3).tex: line 1397 (Appendix)",
+    "page_in_pdf": 48,
+    "hans_comment_id": 116,
+    "hans_comment": "no control over this in practice",
+    "issue_type": "practical limitation acknowledgment needed",
+    "current_caption": "Regime-specific robustness to B misestimation...",
+    "required_changes": [
+      "Add acknowledgment of practical limitation to caption or text",
+      "Note that true B is unknown in operational settings"
+    ],
+    "priority": "LOW",
+    "suggested_fix": "Add to caption or text: 'In practice, the true background covariance B is unknown; this sensitivity analysis provides insight into robustness requirements.'",
+    "status": "NEEDS_CAPTION_UPDATE"
+  }
+]
