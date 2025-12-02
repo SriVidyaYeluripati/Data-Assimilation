@@ -747,6 +747,170 @@ This document contains structured revision notes based on supervisor feedback fr
 
 ---
 
+## Page 31 – Temporal Assimilation / Attractor Geometry
+
+**What this page should do**
+- Present temporal error evolution analysis.
+- Show how Resample vs FixedMean regimes differ in stability over time.
+- Begin discussion of attractor geometry preservation.
+
+**Key information currently present**
+- Temporal error evolution figure for different regimes.
+- Resample achieves fast convergence (~50 time steps).
+- FixedMean shows oscillations and instability at high noise.
+- Generalization to unseen trajectories discussed.
+
+**Hans's comments on this page**
+
+| ID | Original comment | What Hans means | Type | Action / Fix |
+|----|------------------|-----------------|------|--------------|
+| 112 | "what mode" | Figure caption is missing the observation mode specification. | missing definition / notation | NEEDS IMPLEMENTATION: Add observation mode (e.g., "xy mode" or "x mode") to figure caption. |
+
+**Meta-notes for revision**
+- **Repetition:** Some temporal analysis concepts may repeat from earlier sections.
+- **Undefined symbols:** None flagged.
+- **Strong wording:** Avoid "robust" unless justified.
+- **Figure captions:** Ensure all figures specify which observation mode is shown.
+
+---
+
+## Page 32 – Attractor Geometry Preservation (continued)
+
+**What this page should do**
+- Present Hausdorff distance analysis.
+- Show lobe occupancy discrepancy results.
+- Quantify geometric fidelity of different regimes.
+
+**Key information currently present**
+- Global-normalized Hausdorff distance metric defined.
+- Resample achieves low geometric deviation (~0.32).
+- FixedMean shows higher deviation (~1.50).
+- Lobe occupancy analysis introduced.
+
+**Hans's comments on this page**
+
+| ID | Original comment | What Hans means | Type | Action / Fix |
+|----|------------------|-----------------|------|--------------|
+| 113 | "what noise level" | Figure caption is missing the noise level specification. | missing definition / notation | NEEDS IMPLEMENTATION: Add noise level (e.g., "σ = 0.5" or "all noise levels") to figure caption. |
+| 114 | "which model is in the figure?" | Figure caption should specify which model/architecture is shown. | missing definition / notation | NEEDS IMPLEMENTATION: Add model specification (e.g., "GRU", "all architectures") to figure caption. |
+
+**Meta-notes for revision**
+- **Repetition:** Hausdorff distance concept should be defined once.
+- **Undefined symbols:** Ensure Hausdorff distance is defined before use.
+- **Strong wording:** None flagged.
+- **Figure captions:** All figures must clearly specify: observation mode, noise level, and architecture.
+
+---
+
+## Pages 33-34 – Component-wise Corrections / Summary of Section 4.5
+
+**What this page should do**
+- Present component-wise correction patterns (X, Y, Z).
+- Summarize key findings about temporal assimilation and attractor geometry.
+- Transition to ablation studies.
+
+**Key information currently present**
+- Correction c(t) = x^a(t) - x^b(t) defined.
+- Z component shows smooth, low-frequency corrections.
+- X, Y components show higher-variance adjustments.
+- GRU/LSTM reduce correction variance compared to MLP.
+- Summary: Resample stabilizes geometric deviation; FixedMean amplifies distortion.
+
+**Hans's comments on this page**
+- No specific comments on pages 33-34.
+
+**Meta-notes for revision**
+- **Repetition:** Summary may repeat earlier conclusions.
+- **Undefined symbols:** None flagged.
+- **Strong wording:** "robust" appears; consider softening.
+- **Logical order:** Summary should consolidate, not repeat.
+
+---
+
+## Page 35 – Ablation Studies / Practical Recommendations
+
+**What this page should do**
+- Present ablation study on background sampling strategy.
+- Show impact of noise on stability.
+- Begin practical recommendations section.
+
+**Key information currently present**
+- Background sampling strategy comparison (Resample vs FixedMean).
+- Resample shows graceful degradation; FixedMean becomes unstable at σ > 0.5.
+- Failure rates: 70-80% for FixedMean vs 20-25% for Resample at high noise.
+- Recommendation: Avoid FixedMean at σ > 0.5.
+
+**Hans's comments on this page**
+
+| ID | Original comment | What Hans means | Type | Action / Fix |
+|----|------------------|-----------------|------|--------------|
+| 115 | "this is exactly how it should be" | Positive feedback—Hans approves of this presentation. | wording/tone (positive) | No change needed; this is the target style. |
+
+**Meta-notes for revision**
+- **Repetition:** Ablation findings may echo earlier results; focus on new insights.
+- **Undefined symbols:** None flagged.
+- **Strong wording:** "robust" appears; use "reliable" or "stable" instead.
+- **Logical order:** Ablations should follow main results.
+
+---
+
+## Pages 36-47 – Ablation Studies (continued), Conclusion, References, Appendix
+
+**What these pages should do**
+- Complete ablation studies (temporal context, covariance sensitivity, observation sparsity).
+- Present practical recommendations table.
+- Conclude with main findings and future outlook.
+- Provide references and appendix materials.
+
+**Key information currently present**
+- Sequence length ablation: optimal L = 10-15 time steps.
+- Background covariance sensitivity: optimal at λ = 1.0 (true B).
+- Observation sparsity: performance degrades beyond 50% missing observations.
+- Practical recommendations table summarizing key parameters.
+- Conclusion: GRU/LSTM outperform MLP; Resample regime is essential.
+- Future work: hybrid frameworks, generative extensions, higher-dimensional systems.
+- References: Lorenz 1963, Kalman 1960, Fablet et al. (AI-Var), Bocquet et al.
+- Appendix: Data pipelines, training dynamics, attractor geometry diagnostics.
+
+**Hans's comments on these pages**
+- No specific comments on pages 36-47.
+
+**Meta-notes for revision**
+- **Repetition:** Conclusion may repeat findings; keep concise.
+- **Undefined symbols:** All should be defined by now.
+- **Strong wording:** Conclusion uses "rigorous"—soften to "systematic" or "careful".
+- **Logical order:** Conclusion should summarize without introducing new material.
+
+---
+
+## Page 48 – Appendix A.6 (Ablation Figures)
+
+**What this page should do**
+- Present supplementary ablation study figures.
+- Show sensitivity analyses referenced in main text.
+- Provide additional diagnostic plots.
+
+**Key information currently present**
+- Sequence length ablation figure.
+- B-scaling sensitivity figure.
+- Regime-specific robustness figure.
+
+**Hans's comments on this page**
+
+| ID | Original comment | What Hans means | Type | Action / Fix |
+|----|------------------|-----------------|------|--------------|
+| 116 | "no control over this in practice" | Hans notes that the parameter being varied (likely B scaling) cannot be controlled in real-world settings. This is a practical limitation. | methodology | Acknowledge this limitation: "In practice, the true background covariance B is unknown; this sensitivity analysis provides insight into robustness requirements." |
+| 117 | "this is very useful" | Positive feedback—Hans finds this analysis valuable. | wording/tone (positive) | No change needed; maintain this type of analysis. |
+| 118 | "no control, maybe test smaller steps" | Hans suggests testing finer step sizes for more detailed sensitivity analysis. | methodology | FUTURE WORK: Consider testing smaller step sizes (e.g., Δλ = 0.05 instead of 0.1) for B-scaling sensitivity. Add note to future work section. |
+
+**Meta-notes for revision**
+- **Repetition:** Appendix should supplement, not repeat main text.
+- **Undefined symbols:** None flagged.
+- **Strong wording:** None flagged in appendix.
+- **Practical limitations:** Acknowledge that some ablation parameters cannot be controlled operationally.
+
+---
+
 # Global Summary
 
 ## Main Repeated Topics to Compress
@@ -795,6 +959,10 @@ This document contains structured revision notes based on supervisor feedback fr
 - [ ] **ID 107 (p29)**: "something is wrong here" — Error in text/figure. *Guess: Possible typo, incorrect value, or mislabeled figure.*
 - [ ] **ID 109 (p29)**: "we need to discuss this" — Discussion item. *Guess: Result may be unexpected or require interpretation.*
 - [ ] **ID 111 (p30)**: "Maybe keep one plot here" — Plot consolidation suggestion.
+- [ ] **ID 112 (p31)**: "what mode" — Figure caption missing observation mode specification.
+- [ ] **ID 113 (p32)**: "what noise level" — Figure caption missing noise level specification.
+- [ ] **ID 114 (p32)**: "which model is in the figure?" — Figure caption missing model/architecture specification.
+- [ ] **ID 118 (p48)**: "no control, maybe test smaller steps" — Suggestion to test finer step sizes in future work.
 
 ---
 
@@ -840,7 +1008,11 @@ This document contains structured revision notes based on supervisor feedback fr
 14. Consider log-scale plots where requested
 15. Consolidate multiple plots where suggested
 16. Address specific "unclear" comments after discussion
+17. Add observation mode, noise level, and model specification to all figure captions (IDs 112-114)
+18. Acknowledge practical limitations in appendix ablation studies (ID 116)
+19. Consider finer step sizes for sensitivity analyses in future work (ID 118)
 
 ---
 
 *Document generated based on hans_comments_resolution.json and Report/main (3).tex*
+*Updated to include pages 31-48 with 7 additional comments covered*
