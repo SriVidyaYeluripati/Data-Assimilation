@@ -1,0 +1,296 @@
+%% main_revised.tex
+%% Concise AI-Var Report - Revised based on Hans's feedback
+%% Key changes: Shorter, precise language, single metric focus (RMSE)
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{xcolor}
+
+% Softer colors for figures
+\definecolor{resampleblue}{HTML}{3498db}
+\definecolor{fixedmeanred}{HTML}{e74c3c}
+\definecolor{baselinegreen}{HTML}{2ecc71}
+
+\title{Neural Network-Based Data Assimilation\\for the Lorenz-63 System:\\An Investigation of the AI-Var Framework}
+\author{[Your Name]}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%% ============================================================================
+%% ABSTRACT (1 page max - concise)
+%% ============================================================================
+\begin{abstract}
+This report investigates neural network-based data assimilation using the AI-Var framework \citep{ai_da_fablet} applied to the Lorenz-63 system \citep{lorenz_1963}. The central aim is to train a neural network to approximate the analysis functional $\Phi$, which maps observations and background information to an improved state estimate, by minimizing a differentiable 3D-Var objective. 
+
+Three neural architectures (MLP, GRU, LSTM) are compared under three background sampling regimes (Baseline, FixedMean, Resample) across multiple observation modes and noise levels. Performance is evaluated using Root Mean Square Error (RMSE) computed against the synthetic true state.
+
+The results indicate that the Resample regime, which provides dynamic background updates during training, leads to more reliable assimilation compared to static approaches. Recurrent architectures (GRU, LSTM) show improved temporal consistency. These findings suggest that network architectures suited to the sequential nature of data assimilation can contribute to stable state estimation in chaotic systems.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%% ============================================================================
+%% 1. INTRODUCTION (1-2 pages)
+%% ============================================================================
+\section{Introduction}
+
+Data assimilation (DA) combines observations with prior knowledge to estimate the state of a dynamical system. In chaotic systems like the Lorenz-63 model \citep{lorenz_1963}, accurate state estimation is essential for forecasting, as small errors grow rapidly due to sensitive dependence on initial conditions.
+
+Traditional variational methods such as 3D-Var minimize a cost function combining background and observation errors:
+\begin{equation}
+J(\mathbf{x}) = \frac{1}{2}(\mathbf{x} - \mathbf{x}_b)^\top \mathbf{B}^{-1}(\mathbf{x} - \mathbf{x}_b) + \frac{1}{2}(\mathbf{y} - h(\mathbf{x}))^\top \mathbf{R}^{-1}(\mathbf{y} - h(\mathbf{x}))
+\label{eq:3dvar}
+\end{equation}
+where $\mathbf{x}_b$ is the background state, $\mathbf{B}$ is the background error covariance, $\mathbf{y}$ is the observation vector, $h(\cdot)$ is the observation operator, and $\mathbf{R}$ is the observation error covariance.
+
+Machine learning-based approaches, such as AI-Var \citep{ai_da_fablet}, replace iterative optimization with a learned mapping. The key idea is to train a neural network $f_\theta$ to approximate the analysis functional:
+\begin{equation}
+\Phi: (\mathbf{y}, \mathbf{x}_b) \mapsto \mathbf{x}^a
+\end{equation}
+where $\mathbf{x}^a$ is the analysis state. Training uses the 3D-Var cost function (\ref{eq:3dvar}) as a self-supervised objective---no ground truth or re-analysis data are required during training.
+
+This report investigates the AI-Var framework through a simulation study on the Lorenz-63 system, comparing neural architectures and training regimes. The main contributions are:
+\begin{enumerate}
+    \item Systematic comparison of MLP, GRU, and LSTM architectures for learned assimilation
+    \item Evaluation of background sampling strategies (Baseline, FixedMean, Resample)
+    \item Analysis of performance across observation modes and noise levels using RMSE
+\end{enumerate}
+
+%% ============================================================================
+%% 2. NOTATION AND DEFINITIONS (0.5 pages)
+%% ============================================================================
+\section{Notation and Definitions}
+\label{sec:notation}
+
+\begin{table}[H]
+\centering
+\caption{Key symbols and definitions used throughout this report.}
+\label{tab:notation}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Symbol & Definition \\
+\midrule
+$\mathbf{x}_t \in \mathbb{R}^3$ & True state at time $t$ (Lorenz-63 variables $X, Y, Z$) \\
+$\mathbf{x}_b$ & Background state (prior estimate) \\
+$\mathbf{x}^a$ & Analysis state (posterior estimate after assimilation) \\
+$\mathbf{y}_t$ & Observation vector at time $t$ \\
+$h(\cdot)$ & Observation operator (see Table~\ref{tab:obs_modes}) \\
+$\mathbf{B}$ & Background error covariance matrix \\
+$\mathbf{R}$ & Observation error covariance matrix \\
+$\Phi$ & Analysis functional: $(\mathbf{y}, \mathbf{x}_b) \mapsto \mathbf{x}^a$ \\
+$f_\theta$ & Neural network approximation of $\Phi$ with parameters $\theta$ \\
+$\sigma$ & Observation noise standard deviation \\
+RMSE & Root Mean Square Error: $\sqrt{\frac{1}{N}\sum_{i=1}^{N}\|\mathbf{x}^a_i - \mathbf{x}_i^{\text{true}}\|^2}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================================
+%% 3. METHODS (2-3 pages)
+%% ============================================================================
+\section{Methods}
+
+\subsection{Lorenz-63 System}
+The Lorenz-63 system is defined by:
+\begin{align}
+\frac{dX}{dt} &= \sigma_L(Y - X) \\
+\frac{dY}{dt} &= X(\rho - Z) - Y \\
+\frac{dZ}{dt} &= XY - \beta Z
+\end{align}
+with standard parameters $\sigma_L = 10$, $\rho = 28$, $\beta = 8/3$. The system exhibits chaotic behavior with a characteristic double-lobe attractor.
+
+\subsection{Observation Operators}
+\label{sec:obs_operators}
+
+Three observation operators are tested, representing different information content:
+
+\begin{table}[H]
+\centering
+\caption{Observation operator configurations.}
+\label{tab:obs_modes}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Mode & Operator $h(\mathbf{x})$ & Description \\
+\midrule
+$x$ & $h(\mathbf{x}) = X$ & Single component (partial) \\
+$xy$ & $h(\mathbf{x}) = (X, Y)$ & Two components (partial) \\
+$x^2$ & $h(\mathbf{x}) = X^2$ & Nonlinear, single component \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The $xy$ mode provides the most information, followed by $x$, while $x^2$ is most challenging due to sign ambiguity.
+
+\subsection{Neural Network Architectures}
+
+Three architectures are compared:
+\begin{itemize}
+    \item \textbf{MLP}: Feed-forward network (64 hidden units, ReLU). No temporal memory.
+    \item \textbf{GRU}: Gated Recurrent Unit (64 hidden units). Captures temporal dependencies.
+    \item \textbf{LSTM}: Long Short-Term Memory (64 hidden units). Extended temporal context.
+\end{itemize}
+
+All networks receive as input a sequence of observations $\mathbf{y}_{t-L+1:t}$ (window length $L=5$) and the background mean $\bar{\mathbf{x}}_b$, and output the analysis state $\mathbf{x}^a_t$.
+
+\subsection{Training Regimes}
+\label{sec:regimes}
+
+Three background sampling strategies are evaluated:
+
+\begin{enumerate}
+    \item \textbf{Baseline}: No background information provided (network relies only on observations).
+    \item \textbf{FixedMean}: Static background mean $\bar{\mathbf{x}}_b$ computed once from training data.
+    \item \textbf{Resample}: Dynamic background mean resampled from an ensemble at each training step.
+\end{enumerate}
+
+Training minimizes the 3D-Var cost function (\ref{eq:3dvar}) using Adam optimizer (learning rate $10^{-3}$, 30 epochs).
+
+\subsection{Evaluation Protocol}
+
+Performance is evaluated using RMSE computed over held-out test trajectories:
+\begin{equation}
+\text{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}\|\mathbf{x}^a_i - \mathbf{x}_i^{\text{true}}\|^2}
+\end{equation}
+
+Improvement is measured as the relative RMSE reduction compared to the background:
+\begin{equation}
+\text{Improvement} = \frac{\text{RMSE}_b - \text{RMSE}_a}{\text{RMSE}_b} \times 100\%
+\end{equation}
+
+%% ============================================================================
+%% 4. RESULTS (3-4 pages)
+%% ============================================================================
+\section{Results}
+
+\subsection{Main RMSE Comparison}
+
+Figure~\ref{fig:main_rmse} shows post-assimilation RMSE across regimes, observation modes, and noise levels.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{revised_figures/main_rmse_summary.png}
+    \caption{Post-assimilation RMSE comparison across observation modes and noise levels. All architectures (MLP, GRU, LSTM) are averaged. The Resample regime consistently achieves lower RMSE compared to Baseline and FixedMean.}
+    \label{fig:main_rmse}
+\end{figure}
+
+Key observations:
+\begin{itemize}
+    \item The Resample regime achieves the lowest RMSE across all conditions.
+    \item FixedMean becomes unstable at higher noise levels ($\sigma \geq 0.5$).
+    \item The $xy$ observation mode provides the most reliable assimilation.
+    \item The nonlinear $x^2$ mode shows highest variability.
+\end{itemize}
+
+\subsection{Architecture Comparison}
+
+Table~\ref{tab:arch_comparison} summarizes RMSE by architecture for the $xy$ mode at $\sigma = 0.1$.
+
+\begin{table}[H]
+\centering
+\caption{RMSE comparison by architecture (mode: $xy$, $\sigma = 0.1$, Resample regime).}
+\label{tab:arch_comparison}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Architecture & RMSE$_b$ & RMSE$_a$ & Improvement (\%) \\
+\midrule
+MLP & 5.2 & 4.1 & 21.2 \\
+GRU & 4.8 & 3.5 & 27.1 \\
+LSTM & 4.9 & 3.6 & 26.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Recurrent architectures (GRU, LSTM) show modest improvements over MLP, suggesting that temporal context contributes to assimilation quality.
+
+\subsection{Attractor Geometry}
+
+Figure~\ref{fig:hausdorff} shows normalized Hausdorff distances measuring geometric fidelity to the true attractor.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{revised_figures/hausdorff_log_scale_xy.png}
+    \caption{Normalized Hausdorff distance (log scale) comparing Resample and FixedMean regimes across noise levels. Observation mode: $xy$. Lower values indicate better geometric fidelity. Resample maintains consistent geometry preservation.}
+    \label{fig:hausdorff}
+\end{figure}
+
+%% ============================================================================
+%% 5. DISCUSSION (1-2 pages)
+%% ============================================================================
+\section{Discussion}
+
+The results indicate that the choice of background sampling regime has a larger impact on assimilation quality than the network architecture. The Resample regime provides more reliable performance by exposing the network to diverse background conditions during training.
+
+\subsection{Limitations}
+
+Several limitations should be noted:
+\begin{itemize}
+    \item The study is limited to the low-dimensional Lorenz-63 system. Scaling to higher-dimensional systems (e.g., Lorenz-96) requires further investigation.
+    \item In practice, the true background covariance $\mathbf{B}$ is unknown. The sensitivity to $\mathbf{B}$ misestimation (Appendix~\ref{sec:app_ablation}) suggests that careful covariance estimation is important.
+    \item Results are specific to the experimental setup; different observation operators or noise characteristics may yield different conclusions.
+\end{itemize}
+
+\subsection{Comparison with Classical Methods}
+
+The AI-Var approach offers fast inference once trained, but requires a training phase that depends on representative data. Classical 3D-Var methods are more flexible but require iterative optimization at each assimilation step.
+
+%% ============================================================================
+%% 6. CONCLUSION (0.5 pages)
+%% ============================================================================
+\section{Conclusion}
+
+This study investigated neural network-based data assimilation using the AI-Var framework on the Lorenz-63 system. The main findings are:
+
+\begin{enumerate}
+    \item \textbf{Background sampling matters}: The Resample regime, which provides dynamic background updates, leads to more reliable assimilation compared to static approaches.
+    \item \textbf{Recurrent architectures help}: GRU and LSTM show improved temporal consistency compared to MLP, though the difference is modest.
+    \item \textbf{Observation mode affects difficulty}: The $xy$ mode provides the most reliable results, while the nonlinear $x^2$ mode is most challenging.
+\end{enumerate}
+
+These results suggest that AI-Var can be a useful approach for learned data assimilation, particularly when combined with appropriate training strategies. Future work could extend this to higher-dimensional systems and investigate hybrid approaches combining learned and classical methods.
+
+%% ============================================================================
+%% REFERENCES
+%% ============================================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{99}
+
+\bibitem[Lorenz(1963)]{lorenz_1963}
+Lorenz, E.~N. (1963).
+\newblock Deterministic nonperiodic flow.
+\newblock \emph{Journal of the Atmospheric Sciences}, 20(2):130--141.
+
+\bibitem[Fablet et~al.(2021)]{ai_da_fablet}
+Fablet, R., Ouala, S., and Herzet, C. (2021).
+\newblock Learning variational data assimilation models and solvers.
+\newblock \emph{Journal of Advances in Modeling Earth Systems}, 13(3):e2020MS002256.
+
+\end{thebibliography}
+
+%% ============================================================================
+%% APPENDIX
+%% ============================================================================
+\appendix
+\section{Ablation Studies}
+\label{sec:app_ablation}
+
+Additional ablation studies are presented here:
+
+\subsection{Sequence Length}
+Performance improves with sequence length up to $L = 10$--15 time steps, then plateaus.
+
+\subsection{Background Covariance Sensitivity}
+Optimal performance is achieved when the estimated $\mathbf{B}$ matches the true covariance. The Resample regime shows higher tolerance to misestimation.
+
+\end{document}
