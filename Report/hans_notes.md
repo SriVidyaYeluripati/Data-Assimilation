@@ -4,6 +4,36 @@ This document contains structured revision notes based on supervisor feedback fr
 
 ---
 
+## Key Takeaways from Final Meeting with Hans
+
+> **Summary of meeting transcript – Core guidance for revision**
+
+### 1. Length ≠ Quality
+- **You are NOT graded by length; you are graded by precision.**
+- The report can be shorter; what matters is clarity and correctness.
+- This is a programming-focused project—the main effort is in implementation, not mathematical derivation.
+
+### 2. Language and Tone
+- **Avoid strong mathematical words** unless there is strict mathematical justification:
+  - ❌ "rigorous" → ✅ "careful" or "systematic"
+  - ❌ "robust" → ✅ "reliable"
+  - ❌ "safe" → ✅ "stable" or "controlled"
+- ML-influenced language sometimes conflicts with mathematical precision. Soften claims.
+
+### 3. It Doesn't Need to Be Revolutionary
+- The report doesn't need to be the most innovative thing in the world.
+- It's okay if results are inconclusive—what matters is that the setup is clean and ethical.
+- Focus on **what you actually did** (implementation, experimentation) rather than overselling contributions.
+
+### 4. Key Action Items from Meeting
+1. **Compress the first ~20 pages** – too much repetition; boil it down.
+2. **Define symbols before using them** (Φ, f_θ, B, R, observation modes).
+3. **Use AI-Var paper and Lorenz-63 paper** as the main references.
+4. **Focus evaluation on a single metric** (RMSE) for core comparison; other metrics go to discussion/appendix.
+5. **Soften all conclusions** – "suggest" instead of "confirm", "indicate" instead of "prove".
+
+---
+
 ## Page 4 – Abstract
 
 **What this page should do**
