@@ -50,12 +50,41 @@ ARCHITECTURES = ['MLP', 'GRU', 'LSTM']
 
 
 def load_baseline_results(mode, noise):
-    """Load baseline regime results."""
+    """
+    Load baseline regime results from .npy files.
+    
+    Parameters
+    ----------
+    mode : str
+        Observation mode ('x', 'xy', or 'x2')
+    noise : float
+        Noise level (0.05, 0.1, 0.5, or 1.0)
+    
+    Returns
+    -------
+    tuple
+        (truth, analysis, background) arrays
+    
+    Raises
+    ------
+    FileNotFoundError
+        If any of the required .npy files are not found. Callers should handle
+        this exception and provide appropriate fallback behavior.
+    """
     diag_dir = RESULTS_DIR / "baseline" / "diagnostics"
     
-    truth = np.load(diag_dir / f"truth_{mode}_baseline_n{noise}.npy")
-    analysis = np.load(diag_dir / f"analysis_{mode}_baseline_n{noise}.npy")
-    background = np.load(diag_dir / f"background_{mode}_baseline_n{noise}.npy")
+    truth_path = diag_dir / f"truth_{mode}_baseline_n{noise}.npy"
+    analysis_path = diag_dir / f"analysis_{mode}_baseline_n{noise}.npy"
+    background_path = diag_dir / f"background_{mode}_baseline_n{noise}.npy"
+    
+    # Check all files exist before loading
+    for path in [truth_path, analysis_path, background_path]:
+        if not path.exists():
+            raise FileNotFoundError(f"Required data file not found: {path}")
+    
+    truth = np.load(truth_path)
+    analysis = np.load(analysis_path)
+    background = np.load(background_path)
     
     return truth, analysis, background
 
@@ -173,7 +202,11 @@ def generate_attractor_projection():
         truth_flat = truth
         analysis_flat = analysis
     else:
-        print(f"Unexpected shape: truth={truth.shape}")
+        print(f"Unexpected array shape: truth.shape={truth.shape}")
+        print("Expected either:")
+        print("  - 3D array with shape (n_trajectories, n_timesteps, 3)")
+        print("  - 2D array with shape (n_samples, 3)")
+        print("Check that the .npy files contain properly formatted state vectors.")
         return
     
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
