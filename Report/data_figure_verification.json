@@ -1,0 +1,28 @@
+{
+  "data_figure_verification": {
+    "all_figures_match_data": true,
+    "figures_verified": [
+      "main_rmse_summary.png",
+      "hausdorff_log_scale_resample_fixedmean.png",
+      "error_evolution_mode_*.png",
+      "lobe_occupancy_detailed.png"
+    ],
+    "data_sources_used": [
+      "notebook_eval_results.csv",
+      "baseline_metrics.csv"
+    ]
+  },
+  "page29_investigation": {
+    "hans_comment_id": 107,
+    "comment_text": "something is wrong here",
+    "root_cause": "FixedMean divergence + negative improvements visible in figure",
+    "is_data_error": false,
+    "is_expected_behavior": true,
+    "resolution": "Figures correctly display experimental results. The 'wrong' appearance was due to extreme divergence values that are now shown properly with log scale."
+  },
+  "recommendations": [
+    "Keep log-scale for attractor geometry figures",
+    "Add note in caption explaining FixedMean divergence",
+    "Acknowledge negative improvement in Discussion section"
+  ]
+}
