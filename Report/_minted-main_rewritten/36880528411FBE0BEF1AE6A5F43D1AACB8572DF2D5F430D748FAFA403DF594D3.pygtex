@@ -1,0 +1,17 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+src/
+├── data/
+│   ├── generation.py
+│   ├── dataset.py
+│   ├── raw/
+│   │   ├── train\PYGZus{}traj.npy
+│   │   ├── test\PYGZus{}traj.npy
+│   │   ├── B.npy
+│   ├── obs/
+│   │   ├── obs\PYGZus{}x\PYGZus{}n0.05.npy
+│   │   ├── obs\PYGZus{}xy\PYGZus{}n*.npy
+│   ├── splits/
+│   │   ├── train\PYGZus{}indices.npy
+│   │   ├── val\PYGZus{}indices.npy
+│   │   ├── test\PYGZus{}indices.npy
+\end{Verbatim}
