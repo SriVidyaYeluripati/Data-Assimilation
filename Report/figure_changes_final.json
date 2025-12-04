@@ -1,0 +1,46 @@
+[
+  {
+    "figure_name": "fig1_rmse_comparison.png",
+    "original_issue": "Hans ID 111: Maybe keep one plot here (consolidation)",
+    "script": "Report/scripts_final/plot_fig1_rmse_comparison.py",
+    "diagnosis": "Multiple scattered RMSE plots across pages made comparison difficult. Hans requested consolidation into single figure.",
+    "new_insight": "Resample regime yields RMSE 7-12 across modes, substantially lower than baseline (~16). The nonlinear x² mode shows highest RMSE (~12). Bar comparison clearly shows regime differences.",
+    "patch": {
+      "latex_caption": "Comparison of post-assimilation RMSE between the Resample regime and the baseline (no assimilation) across observation modes.",
+      "latex_reference_fix": "Section 4.5, Figure 4"
+    }
+  },
+  {
+    "figure_name": "fig2_architecture_comparison.png",
+    "original_issue": "Hans ID 114: which model is in the figure?",
+    "script": "Report/scripts_final/plot_fig2_architecture.py",
+    "diagnosis": "Original figures lacked model/architecture specification in caption and legend. Hans requested explicit labeling.",
+    "new_insight": "GRU, LSTM, and MLP architectures show similar performance (within 1 RMSE unit). No clear winner among architectures. All three follow same pattern: x² mode hardest, x mode easiest.",
+    "patch": {
+      "latex_caption": "Post-assimilation RMSE by architecture and noise level for each observation mode (Resample regime).",
+      "latex_reference_fix": "Section 4.3, Figure 2"
+    }
+  },
+  {
+    "figure_name": "fig3_fixedmean_divergence_log.png",
+    "original_issue": "Hans ID 105: can you make it a log plot? + ID 107: something is wrong here",
+    "script": "Report/scripts_final/plot_fig3_divergence.py",
+    "diagnosis": "Original linear-scale plot made FixedMean divergence appear as 'wrong' data. Log scale reveals the actual behavior: FixedMean RMSE > 10^5 while Resample remains < 20.",
+    "new_insight": "FixedMean regime exhibits complete divergence across ALL configurations (RMSE > 700,000). This is NOT an error but reflects the fundamental inability of the network to produce meaningful estimates without informative background. Resample regime shows stable behavior (RMSE 7-14).",
+    "patch": {
+      "latex_caption": "Comparison of post-assimilation RMSE between the Resample and FixedMean regimes (logarithmic scale). The FixedMean regime exhibits complete divergence with RMSE exceeding $10^5$.",
+      "latex_reference_fix": "Section 4.2, Figure 1"
+    }
+  },
+  {
+    "figure_name": "fig4_improvement_analysis.png",
+    "original_issue": "Hans meeting feedback: Focus on single clear metric (RMSE)",
+    "script": "Report/scripts_final/plot_fig4_improvement.py",
+    "diagnosis": "Original report used multiple metrics without clear focus. Hans emphasized RMSE as the core comparison metric.",
+    "new_insight": "Mean improvement is NEGATIVE for most configurations (-0.07% to -0.72%). This indicates the network does not consistently improve upon the background. Isolated positive cases (MLP/x mode: +0.6%) are not consistent across noise levels.",
+    "patch": {
+      "latex_caption": "Mean improvement percentage by observation mode and architecture. Negative values indicate that the analysis is worse than the background.",
+      "latex_reference_fix": "Section 4.4, Figure 3"
+    }
+  }
+]

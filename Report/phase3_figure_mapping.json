@@ -1,0 +1,148 @@
+{
+  "phase3_figure_mapping": {
+    "description": "JSON mapping of all figures used in main_revised.tex Phase 3",
+    "created": "2024-12-04",
+    "based_on": "Phase 2 analysis and Hans's comments"
+  },
+  "figures": [
+    {
+      "figure_name": "main_rmse_summary.png",
+      "location": "Report/figures_new/main_rmse_summary.png",
+      "tex_reference": "Figure 1 (fig:main_rmse)",
+      "section": "Results (Section 6.1)",
+      "hans_comment_id": "Meeting guidance",
+      "original_issue": "Focus on single metric (RMSE)",
+      "modification": "Created new figure with RMSE as primary metric across modes/noise",
+      "data_source": "results/resample/*/notebook_eval_results.csv",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "rmse_vs_rmdse_improvement.png",
+      "location": "Report/figures_new/rmse_vs_rmdse_improvement.png",
+      "tex_reference": "Figure 2 (fig:rmse_rmdse)",
+      "section": "Results (Section 6.3)",
+      "hans_comment_id": "Phase 2 insight",
+      "original_issue": "RMSE may mask improvements due to outliers",
+      "modification": "Created comparison figure showing sign reversal for x² mode",
+      "data_source": "Computed RMSE and RMDSE from trajectory data",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "main_rmdse_summary.png",
+      "location": "Report/figures_new/main_rmdse_summary.png",
+      "tex_reference": "Figure 3 (fig:rmdse_summary)",
+      "section": "Results (Section 6.4)",
+      "hans_comment_id": "Phase 2 insight",
+      "original_issue": "Need complementary metric for nonlinear modes",
+      "modification": "Created RMDSE summary showing positive improvement for all modes",
+      "data_source": "Computed RMDSE from trajectory data",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "rmse_consolidated.png",
+      "location": "Report/figures_new/rmse_consolidated.png",
+      "tex_reference": "Figure 4 (fig:consolidated)",
+      "section": "Results (Section 6.5)",
+      "hans_comment_id": "ID 111",
+      "original_issue": "Multiple plots should be consolidated",
+      "modification": "Created 4-panel figure combining background/analysis, improvement, architecture breakdown",
+      "data_source": "results/resample/*/notebook_eval_results.csv",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "hausdorff_log_scale_resample_fixedmean.png",
+      "location": "Report/figures_new/hausdorff_log_scale_resample_fixedmean.png",
+      "tex_reference": "Figure 5 (fig:hausdorff)",
+      "section": "Results (Section 6.6)",
+      "hans_comment_id": "ID 105",
+      "original_issue": "Request for log-scale y-axis",
+      "modification": "Changed y-axis to logarithmic scale to show FixedMean divergence",
+      "data_source": "results/*/geometry_metrics*.csv",
+      "status": "MODIFIED"
+    },
+    {
+      "figure_name": "error_evolution_mode_xy.png",
+      "location": "Report/figures_new/error_evolution_mode_xy.png",
+      "tex_reference": "Figure 6 (fig:temporal)",
+      "section": "Results (Section 6.7)",
+      "hans_comment_id": "ID 112",
+      "original_issue": "Missing observation mode in caption/title",
+      "modification": "Added mode specification to figure title",
+      "data_source": "Computed from trajectory data",
+      "status": "MODIFIED"
+    },
+    {
+      "figure_name": "lobe_occupancy_detailed.png",
+      "location": "Report/figures_new/lobe_occupancy_detailed.png",
+      "tex_reference": "Figure 7 (fig:lobe)",
+      "section": "Results (Section 6.8)",
+      "hans_comment_id": "ID 113, 114",
+      "original_issue": "Missing noise level and model/architecture specification",
+      "modification": "Added noise level and architecture labels to heatmap axes",
+      "data_source": "Report/lobe_occupancy_*.csv",
+      "status": "MODIFIED"
+    },
+    {
+      "figure_name": "classical_da_annotated.png",
+      "location": "Report/figures_new/classical_da_annotated.png",
+      "tex_reference": "Figure A.1 (fig:classical_da)",
+      "section": "Appendix A.1",
+      "hans_comment_id": "ID 57",
+      "original_issue": "Missing source citation and Φ label",
+      "modification": "Added Φ annotation and source citation to schematic",
+      "data_source": "Conceptual diagram",
+      "status": "MODIFIED"
+    },
+    {
+      "figure_name": "metric_distributions_rmse_rmdse.png",
+      "location": "Report/figures_new/metric_distributions_rmse_rmdse.png",
+      "tex_reference": "Figure A.2 (fig:distributions)",
+      "section": "Appendix A.2",
+      "hans_comment_id": "Phase 2 insight",
+      "original_issue": "Need to show metric distribution differences",
+      "modification": "Created histogram comparison of RMSE vs RMDSE distributions",
+      "data_source": "Computed from all experimental results",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "noise_sensitivity_rmdse.png",
+      "location": "Report/figures_new/noise_sensitivity_rmdse.png",
+      "tex_reference": "Figure A.3 (fig:noise_rmdse)",
+      "section": "Appendix A.3",
+      "hans_comment_id": "Phase 2 insight",
+      "original_issue": "Need to assess RMDSE noise sensitivity",
+      "modification": "Created noise sensitivity comparison for RMDSE",
+      "data_source": "Computed RMDSE across noise levels",
+      "status": "NEW"
+    },
+    {
+      "figure_name": "error_evolution_mode_x.png",
+      "location": "Report/figures_new/error_evolution_mode_x.png",
+      "tex_reference": "Figure A.4 (fig:error_x)",
+      "section": "Appendix A.4",
+      "hans_comment_id": "ID 112",
+      "original_issue": "Missing mode specification",
+      "modification": "Added mode x specification to figure title",
+      "data_source": "Computed from trajectory data",
+      "status": "MODIFIED"
+    },
+    {
+      "figure_name": "error_evolution_mode_x2.png",
+      "location": "Report/figures_new/error_evolution_mode_x2.png",
+      "tex_reference": "Figure A.5 (fig:error_x2)",
+      "section": "Appendix A.4",
+      "hans_comment_id": "ID 112",
+      "original_issue": "Missing mode specification",
+      "modification": "Added mode x² specification to figure title",
+      "data_source": "Computed from trajectory data",
+      "status": "MODIFIED"
+    }
+  ],
+  "summary": {
+    "total_figures": 12,
+    "new_figures": 5,
+    "modified_figures": 7,
+    "hans_comments_addressed": ["ID 57", "ID 105", "ID 111", "ID 112", "ID 113", "ID 114", "Meeting guidance"],
+    "phase2_insights_incorporated": ["RMDSE analysis", "Sign reversal for x² mode", "Metric distribution comparison"]
+  }
+}

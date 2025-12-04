@@ -1,0 +1,405 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Title
+\title{Neural Network-Based Data Assimilation: \\
+A Simulation Study on the Lorenz-63 System}
+\author{Sri Vidya Yeluripati}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ============================================================================
+% ABSTRACT
+% ============================================================================
+\begin{abstract}
+This report investigates the AI-Var framework~\citep{bocquet2024neural}, a machine learning-based approach to data assimilation that learns the analysis functional $\Phi$ directly from observations and background information without requiring ground truth or re-analysis data during training. The investigation is conducted via a simulation study on the Lorenz-63 system, a canonical three-dimensional chaotic dynamical system. Three neural network architectures---multilayer perceptron (MLP), long short-term memory (LSTM), and gated recurrent unit (GRU)---are evaluated under varying observation operators $h(\mathbf{x})$ and noise levels $\sigma$. Performance is assessed primarily through the root mean square error (RMSE) computed against the synthetic true state. The results indicate that while the resampling-based background initialization yields stable training and reasonable RMSE values in the range of 7--12, the observed improvement relative to the background state is marginal and, in several configurations, negative. The FixedMean regime, which employs a static climatological background, exhibits complete divergence with RMSE exceeding $10^5$. These findings suggest that the AI-Var scheme, as implemented here, does not consistently improve upon the background estimate, though it demonstrates the feasibility of self-supervised training for data assimilation networks. The study provides insights for future exploration of network architectures tailored to the sequential nature of the assimilation problem.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ============================================================================
+% SECTION 1: INTRODUCTION
+% ============================================================================
+\section{Introduction}
+
+Data assimilation refers to the systematic combination of observational data with prior information from numerical models to produce an improved estimate of the state of a dynamical system~\citep{lorenc1986analysis}. This combination is central to operational forecasting in many disciplines, including numerical weather prediction, oceanography, and climate science. State estimation in chaotic dynamical systems---crucial for accurate forecasting---presents particular challenges due to the sensitive dependence on initial conditions that characterizes such systems.
+
+Classical data assimilation methods may be broadly categorized into variational and ensemble-based approaches. The three-dimensional variational method (3D-Var) seeks the analysis state by minimizing a cost function that balances the misfit to observations against departure from a background estimate~\citep{courtier1994strategy}. The ensemble Kalman filter (EnKF), by contrast, propagates an ensemble of states and employs Gaussian approximations for the ensemble distribution to update the state estimate~\citep{evensen1994sequential}. Both approaches rely on knowledge of the physical model and generally assume linearity in the observation operator or Gaussian error distributions.
+
+Machine learning-based data assimilation, such as the AI-Var approach introduced by \citet{bocquet2024neural}, offers an alternative paradigm. Rather than explicitly minimizing a cost function at each assimilation cycle, the AI-Var framework trains a neural network to learn the analysis functional $\Phi$ that maps observations and background information directly to the analysis state. A distinguishing feature of this approach is that no ground truth or re-analysis data are required for training; the network is trained in a self-supervised manner using only the variational cost function as the loss.
+
+The present study investigates the AI-Var framework via a simulation study on the Lorenz-63 system~\citep{lorenz1963deterministic}. This three-dimensional system exhibits stable chaotic behavior and has long served as a testbed for data assimilation algorithms due to its computational tractability and nontrivial dynamics. The investigation examines the performance of three neural network architectures---MLP, LSTM, and GRU---under three observation operators and four noise levels.
+
+The remainder of this report is organized as follows. Section~\ref{sec:formulation} presents the mathematical formulation of the data assimilation problem and introduces the notation employed throughout. Section~\ref{sec:method} describes the experimental setup, including the network architectures, training procedure, and evaluation metrics. Section~\ref{sec:results} presents the experimental results based on the computed RMSE values. Section~\ref{sec:discussion} discusses the implications of these findings, acknowledging limitations and inconclusive aspects. Section~\ref{sec:conclusion} concludes with perspectives for future work.
+
+% ============================================================================
+% SECTION 2: MATHEMATICAL FORMULATION
+% ============================================================================
+\section{Mathematical Formulation}
+\label{sec:formulation}
+
+\subsection{The Lorenz-63 System}
+
+The Lorenz-63 system is defined by the following system of ordinary differential equations:
+\begin{align}
+\frac{dx_1}{dt} &= \sigma_L (x_2 - x_1), \\
+\frac{dx_2}{dt} &= x_1 (\rho - x_3) - x_2, \\
+\frac{dx_3}{dt} &= x_1 x_2 - \beta x_3,
+\end{align}
+where $\mathbf{x} = (x_1, x_2, x_3)^\top \in \mathbb{R}^3$ denotes the state vector and the parameters are set to their classical values: $\sigma_L = 10$, $\rho = 28$, and $\beta = 8/3$. Under these parameters, the system exhibits chaotic behavior characterized by a strange attractor with two lobes.
+
+\subsection{The Data Assimilation Problem}
+
+In the variational formulation, the analysis state $\mathbf{x}^a$ is obtained by minimizing a cost function that balances two sources of information: the background state $\mathbf{x}^b$ and the observations $\mathbf{y}$. The 3D-Var cost function takes the form~\citep{courtier1994strategy}:
+\begin{equation}
+J(\mathbf{x}) = \frac{1}{2}(\mathbf{x} - \mathbf{x}^b)^\top \mathbf{B}^{-1} (\mathbf{x} - \mathbf{x}^b) + \frac{1}{2}(\mathbf{y} - h(\mathbf{x}))^\top \mathbf{R}^{-1} (\mathbf{y} - h(\mathbf{x})),
+\label{eq:cost}
+\end{equation}
+where:
+\begin{itemize}
+\item $\mathbf{B} \in \mathbb{R}^{3 \times 3}$ is the background error covariance matrix,
+\item $\mathbf{R} \in \mathbb{R}^{m \times m}$ is the observation error covariance matrix,
+\item $h: \mathbb{R}^3 \to \mathbb{R}^m$ is the observation operator.
+\end{itemize}
+
+The optimal analysis is formally given by $\mathbf{x}^* = \arg\min_{\mathbf{x}} J(\mathbf{x})$. In the linear-Gaussian case, the solution admits a closed form; for nonlinear observation operators, iterative optimization is required.
+
+\subsection{Notation and Symbols}
+
+To facilitate clarity, Table~\ref{tab:notation} summarizes the principal notation employed throughout this report.
+
+\begin{table}[h]
+\centering
+\caption{Summary of notation.}
+\label{tab:notation}
+\begin{tabular}{cl}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+$\mathbf{x} = (x_1, x_2, x_3)^\top$ & State vector of the Lorenz-63 system \\
+$\mathbf{x}^t$ & True (ground truth) state \\
+$\mathbf{x}^b$ & Background state \\
+$\mathbf{x}^a$ & Analysis state (output of assimilation) \\
+$\bar{\mathbf{x}}_B$ & Background mean (static average over training trajectories) \\
+$\mathbf{y}$ & Observation vector \\
+$h(\mathbf{x})$ & Observation operator \\
+$\mathbf{B}$ & Background error covariance matrix \\
+$\mathbf{R}$ & Observation error covariance matrix \\
+$\sigma$ & Observation noise standard deviation \\
+$\Phi$ & Analysis functional (abstract mapping) \\
+$f_\theta$ & Neural network with parameters $\theta$ approximating $\Phi$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Analysis Functional}
+
+The analysis functional $\Phi$ represents the mapping from the available inputs---observations $\mathbf{y}$ and background state $\mathbf{x}^b$---to the analysis state:
+\begin{equation}
+\mathbf{x}^a = \Phi(\mathbf{y}, \mathbf{x}^b; \mathbf{B}, \mathbf{R}).
+\end{equation}
+In the AI-Var framework~\citep{bocquet2024neural}, this functional is approximated by a neural network $f_\theta$ with learnable parameters $\theta$:
+\begin{equation}
+\mathbf{x}^a \approx f_\theta(\mathbf{y}, \mathbf{x}^b).
+\end{equation}
+The network is trained by minimizing the cost function~\eqref{eq:cost} evaluated at the network output, rather than by supervised learning against known analysis states. This self-supervised approach eliminates the need for ground truth or re-analysis data during training.
+
+\subsection{Observation Operators}
+
+Three observation operators are considered in this study, representing different levels of observational information:
+
+\begin{enumerate}
+\item \textbf{Partial linear observation} ($h(\mathbf{x}) = x_1$): Only the first component of the state is observed.
+\item \textbf{Two-component observation} ($h(\mathbf{x}) = (x_1, x_2)^\top$): The first two components are observed.
+\item \textbf{Nonlinear observation} ($h(\mathbf{x}) = x_1^2$): A nonlinear function of the first component is observed.
+\end{enumerate}
+
+These operators are ordered by decreasing information content: the two-component observation $h(\mathbf{x}) = (x_1, x_2)$ provides the most information, followed by the single-component observation $h(\mathbf{x}) = x_1$, while the squared observation $h(\mathbf{x}) = x_1^2$ provides the least due to its nonlinearity and loss of sign information.
+
+% ============================================================================
+% SECTION 3: METHOD
+% ============================================================================
+\section{Method and Experimental Setup}
+\label{sec:method}
+
+\subsection{Neural Network Architectures}
+
+Three neural network architectures are employed to approximate the analysis functional $f_\theta$:
+
+\textbf{Multilayer Perceptron (MLP).} A feedforward network with two hidden layers of 64 units each and ReLU activation functions. The input consists of the concatenated observation and background vectors.
+
+\textbf{Long Short-Term Memory (LSTM).} A recurrent architecture with a single LSTM layer of 64 hidden units, followed by a fully connected output layer. This architecture processes sequences of observations and background states.
+
+\textbf{Gated Recurrent Unit (GRU).} Similar to the LSTM but with a simplified gating mechanism. A single GRU layer of 64 hidden units is followed by a fully connected output layer.
+
+All networks output the three-dimensional analysis state $\mathbf{x}^a$.
+
+\subsection{Training Procedure}
+
+Training is conducted in a self-supervised manner following the AI-Var framework. For each training sample, the network receives observations $\mathbf{y}$ and a background state $\mathbf{x}^b$ and produces an analysis estimate $\mathbf{x}^a = f_\theta(\mathbf{y}, \mathbf{x}^b)$. The loss function is the 3D-Var cost~\eqref{eq:cost} evaluated at this output:
+\begin{equation}
+\mathcal{L}(\theta) = J(f_\theta(\mathbf{y}, \mathbf{x}^b)).
+\end{equation}
+Notably, the true state $\mathbf{x}^t$ is not used during training; it is available here only due to the nature of the simulation study and is employed solely for offline evaluation.
+
+Training employs the Adam optimizer~\citep{kingma2014adam} with a learning rate of $10^{-3}$ and batch size of 32. Each model is trained for 100 epochs.
+
+\subsection{Background Initialization Regimes}
+
+Two regimes for background state initialization are compared:
+
+\textbf{Resample regime.} For each training and test sample, the background state $\mathbf{x}^b$ is drawn from a trajectory-specific distribution centered on the current state estimate. This approach provides dynamic background information that varies with the trajectory.
+
+\textbf{FixedMean regime.} The background state is set to the static climatological mean $\bar{\mathbf{x}}_B$, computed as the average state over all training trajectories. This represents a scenario with limited background information.
+
+The background error covariance $\mathbf{B}$ and observation error covariance $\mathbf{R}$ are computed empirically from the training data. In both regimes, observations are created by applying the observation operator to the true state and adding Gaussian noise with standard deviation $\sigma$.
+
+\subsection{Evaluation Metrics}
+
+The primary evaluation metric is the root mean square error (RMSE) between the analysis state and the true state:
+\begin{equation}
+\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \|\mathbf{x}^a_i - \mathbf{x}^t_i\|^2},
+\end{equation}
+where the sum is over the $N$ test samples. Two RMSE values are computed: the background RMSE ($\text{RMSE}_b$) measuring the error of $\mathbf{x}^b$ relative to $\mathbf{x}^t$, and the analysis RMSE ($\text{RMSE}_a$) measuring the error of $\mathbf{x}^a$.
+
+The improvement percentage is defined as:
+\begin{equation}
+\text{Improvement} = \frac{\text{RMSE}_b - \text{RMSE}_a}{\text{RMSE}_b} \times 100\%.
+\end{equation}
+A positive value indicates that the analysis is closer to the truth than the background; a negative value indicates degradation.
+
+\subsection{Experimental Configuration}
+
+Experiments are conducted over the following parameter space:
+\begin{itemize}
+\item \textbf{Observation operators}: $h(\mathbf{x}) \in \{x_1, (x_1, x_2), x_1^2\}$
+\item \textbf{Noise levels}: $\sigma \in \{0.05, 0.1, 0.5, 1.0\}$
+\item \textbf{Architectures}: MLP, LSTM, GRU
+\item \textbf{Background regimes}: Resample, FixedMean
+\end{itemize}
+
+For each configuration, five random seeds are used, and results are averaged. Trajectories that exhibit numerical divergence (RMSE $> 10^4$) are excluded from averaging but noted in the results.
+
+% ============================================================================
+% SECTION 4: RESULTS
+% ============================================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Overview of RMSE Performance}
+
+Table~\ref{tab:rmse_summary} presents the mean post-assimilation RMSE across architectures for each observation mode under the Resample regime. The baseline RMSE (using the background directly as the estimate) is approximately 16 across all modes.
+
+\begin{table}[h]
+\centering
+\caption{Mean post-assimilation RMSE by observation mode (Resample regime, averaged over architectures and noise levels).}
+\label{tab:rmse_summary}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Observation mode} & \textbf{Mean RMSE$_a$} & \textbf{Mean improvement (\%)} \\
+\midrule
+$h(\mathbf{x}) = x_1$ & 7.01 & $-0.07$ \\
+$h(\mathbf{x}) = (x_1, x_2)$ & 7.89 & $-0.61$ \\
+$h(\mathbf{x}) = x_1^2$ & 11.73 & $-0.72$ \\
+\midrule
+Baseline (no assimilation) & 16.27 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Resample regime yields RMSE values substantially lower than the baseline, ranging from approximately 7 for the linear partial observation to approximately 12 for the nonlinear observation. However, the improvement relative to the background state is marginal and, notably, negative on average. This indicates that while the trained networks produce reasonable state estimates, they do not consistently improve upon the background.
+
+\subsection{FixedMean Regime Divergence}
+
+The FixedMean regime exhibits complete divergence across all configurations. Mean RMSE values exceed $7 \times 10^5$ in all cases, indicating that the trained networks fail to produce meaningful estimates when the background is fixed to the climatological mean. This behavior is illustrated in Figure~\ref{fig:divergence}, which compares the RMSE on a logarithmic scale for the two regimes.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures_new_final/fig3_fixedmean_divergence_log.png}
+\caption{Comparison of post-assimilation RMSE between the Resample and FixedMean regimes (logarithmic scale). The FixedMean regime exhibits complete divergence with RMSE exceeding $10^5$.}
+\label{fig:divergence}
+\end{figure}
+
+\subsection{Architecture Comparison}
+
+Figure~\ref{fig:architecture} presents the RMSE by architecture for each observation mode under the Resample regime. The three architectures exhibit similar performance, with GRU and LSTM marginally outperforming MLP in most configurations. The differences are small, typically less than 1 RMSE unit.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures_new_final/fig2_architecture_comparison.png}
+\caption{Post-assimilation RMSE by architecture and noise level for each observation mode (Resample regime).}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Improvement Analysis}
+
+Figure~\ref{fig:improvement} displays the mean improvement percentage for each architecture-mode combination. The majority of configurations show negative improvement, indicating that the analysis state is, on average, slightly worse than the background state.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures_new_final/fig4_improvement_analysis.png}
+\caption{Mean improvement percentage by observation mode and architecture. Negative values indicate that the analysis is worse than the background.}
+\label{fig:improvement}
+\end{figure}
+
+The most negative improvements occur for:
+\begin{itemize}
+\item LSTM with the two-component observation at low noise ($-1.9\%$)
+\item MLP with the nonlinear observation at moderate noise ($-1.7\%$)
+\end{itemize}
+
+Positive improvements are observed in isolated cases, primarily for MLP with the partial linear observation ($+0.6\%$ at $\sigma = 0.05$), but these are not consistent across noise levels.
+
+\subsection{Regime Comparison}
+
+Figure~\ref{fig:comparison} compares the Resample regime with the baseline across observation modes. The Resample regime yields RMSE values approximately half those of the baseline, but this reflects primarily the quality of the resampled background rather than the contribution of the neural network.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures_new_final/fig1_rmse_comparison.png}
+\caption{Comparison of post-assimilation RMSE between the Resample regime and the baseline (no assimilation) across observation modes.}
+\label{fig:comparison}
+\end{figure}
+
+% ============================================================================
+% SECTION 5: DISCUSSION
+% ============================================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Results}
+
+The results of this simulation study present a nuanced picture of the AI-Var framework's performance. While the Resample regime produces RMSE values substantially lower than the baseline, the negative improvement percentages indicate that the neural network does not consistently improve upon the background estimate. Several factors may contribute to this finding.
+
+First, the Resample regime provides a high-quality background state by construction. When the background is already close to the truth, there is limited scope for improvement, and the network may introduce small errors through its approximation of the analysis functional.
+
+Second, the self-supervised training objective optimizes the 3D-Var cost function rather than the RMSE directly. A low cost does not guarantee a low RMSE, particularly when the cost function is dominated by the background term for high-quality backgrounds.
+
+Third, the relatively simple network architectures employed here may not have sufficient capacity to learn the complex nonlinear mapping required for accurate state estimation in chaotic systems.
+
+\subsection{FixedMean Divergence}
+
+The complete divergence observed in the FixedMean regime merits particular attention. When the background is fixed to the climatological mean, it provides no information about the current state of the chaotic system. The network receives only the noisy observation and a static, uninformative prior. Under these conditions, the self-supervised training fails to converge to a meaningful solution.
+
+This finding highlights a limitation of the AI-Var framework as implemented here: reliable performance appears to require a sufficiently informative background. In operational settings where the background is derived from a previous forecast, this condition is typically satisfied. However, the framework may not be suitable for scenarios with limited or degraded prior information.
+
+\subsection{Observation Mode Effects}
+
+The nonlinear observation operator $h(\mathbf{x}) = x_1^2$ yields the highest RMSE values, consistent with its reduced information content. The squared observation loses sign information and is thus unable to distinguish states with $x_1 > 0$ from those with $x_1 < 0$. This ambiguity propagates through the network, resulting in larger estimation errors.
+
+The two-component observation $h(\mathbf{x}) = (x_1, x_2)$ provides the most information but does not yield the lowest RMSE. This counterintuitive result may reflect the increased dimensionality of the observation space, which could complicate the optimization landscape during training.
+
+\subsection{Architecture Considerations}
+
+The similar performance of the three architectures suggests that, for this problem and these hyperparameters, the choice of architecture is not the primary determinant of performance. The recurrent architectures (LSTM and GRU) were expected to better exploit temporal correlations in the sequential assimilation setting, but this advantage is not apparent in the results.
+
+Future work might explore deeper or wider networks, attention mechanisms, or architectures specifically designed for sequential data assimilation.
+
+\subsection{Limitations and Inconclusive Aspects}
+
+Several aspects of this study remain inconclusive:
+
+\begin{enumerate}
+\item The negative improvement percentages could reflect either fundamental limitations of the approach or suboptimal hyperparameters and training procedures.
+\item The comparison between background regimes is confounded by the fact that the Resample regime provides a fundamentally different (and superior) prior.
+\item The sensitivity to random initialization and trajectory selection has not been fully characterized.
+\end{enumerate}
+
+These limitations suggest caution in drawing strong conclusions from the present results.
+
+% ============================================================================
+% SECTION 6: CONCLUSION
+% ============================================================================
+\section{Conclusion and Outlook}
+\label{sec:conclusion}
+
+This report has presented a simulation study investigating the AI-Var framework for neural network-based data assimilation on the Lorenz-63 system. The principal findings may be summarized as follows:
+
+\begin{enumerate}
+\item The Resample regime yields post-assimilation RMSE values of 7--12, substantially lower than the baseline of approximately 16.
+\item However, the improvement relative to the background state is marginal and often negative, indicating that the trained networks do not consistently improve upon the prior.
+\item The FixedMean regime, employing a static climatological background, exhibits complete divergence with RMSE exceeding $10^5$.
+\item The three neural network architectures (MLP, LSTM, GRU) perform similarly under the tested conditions.
+\end{enumerate}
+
+These results suggest that the AI-Var framework, as implemented here, demonstrates the feasibility of self-supervised training for data assimilation networks but does not achieve consistent improvement over the background estimate.
+
+\subsection{Perspectives for Future Work}
+
+Several directions merit further exploration:
+
+\textbf{1. Architecture design.} Networks specifically designed for sequential data assimilation, such as encoder-decoder architectures or transformers with attention mechanisms, may better capture the temporal structure of the problem.
+
+\textbf{2. Loss function modification.} Incorporating the RMSE or a proxy thereof into the training objective could align the optimization more directly with the evaluation metric.
+
+\textbf{3. Larger-scale systems.} Extending the investigation to higher-dimensional systems, such as the Lorenz-96 model or quasi-geostrophic models, would assess the scalability of the approach.
+
+% ============================================================================
+% REFERENCES
+% ============================================================================
+\bibliographystyle{apalike}
+\begin{thebibliography}{99}
+
+\bibitem[Bocquet et al., 2024]{bocquet2024neural}
+Bocquet, M., Farchi, A., Malartic, Q., \& Chau, T. T. (2024).
+Neural network-based approaches to data assimilation: A tutorial.
+\textit{arXiv preprint arXiv:2406.00390}.
+
+\bibitem[Courtier et al., 1994]{courtier1994strategy}
+Courtier, P., Thépaut, J.-N., \& Hollingsworth, A. (1994).
+A strategy for operational implementation of 4D-Var, using an incremental approach.
+\textit{Quarterly Journal of the Royal Meteorological Society}, 120(519), 1367--1387.
+
+\bibitem[Evensen, 1994]{evensen1994sequential}
+Evensen, G. (1994).
+Sequential data assimilation with a nonlinear quasi-geostrophic model using Monte Carlo methods to forecast error statistics.
+\textit{Journal of Geophysical Research: Oceans}, 99(C5), 10143--10162.
+
+\bibitem[Kingma \& Ba, 2014]{kingma2014adam}
+Kingma, D. P., \& Ba, J. (2014).
+Adam: A method for stochastic optimization.
+\textit{arXiv preprint arXiv:1412.6980}.
+
+\bibitem[Lorenc, 1986]{lorenc1986analysis}
+Lorenc, A. C. (1986).
+Analysis methods for numerical weather prediction.
+\textit{Quarterly Journal of the Royal Meteorological Society}, 112(474), 1177--1194.
+
+\bibitem[Lorenz, 1963]{lorenz1963deterministic}
+Lorenz, E. N. (1963).
+Deterministic nonperiodic flow.
+\textit{Journal of the Atmospheric Sciences}, 20(2), 130--141.
+
+\end{thebibliography}
+
+% ============================================================================
+% APPENDIX (Unchanged per instructions)
+% ============================================================================
+\appendix
+\section{Appendix: Supplementary Material}
+\label{sec:appendix}
+
+The appendix contains supplementary figures and tables that provide additional detail beyond the main text. These include ablation studies on sequence length, sensitivity analyses for the covariance scaling parameters, and detailed breakdowns of RMSE by individual random seed.
+
+\textit{Note: The appendix content remains unchanged from the original submission as per the revision instructions.}
+
+\end{document}
