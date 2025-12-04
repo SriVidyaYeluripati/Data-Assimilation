@@ -1,0 +1,14 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.pyg
+
+# Ignore PDFs except specific ones
+*.pdf
+!Report/figures_new/*.pdf
+
+# Python cache
+__pycache__/
+*.pyc
