@@ -186,7 +186,7 @@ def plot_rmse_consolidated():
     
     # Main title
     fig.suptitle('Consolidated RMSE Analysis\n'
-                 '(Combines multiple figures as suggested by Hans - ID 111)',
+                 '(Multiple metrics combined into single figure)',
                  fontsize=14, fontweight='bold', y=1.02)
     
     plt.tight_layout()

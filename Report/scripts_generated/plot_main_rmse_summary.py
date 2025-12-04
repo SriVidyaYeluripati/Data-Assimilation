@@ -121,7 +121,7 @@ def plot_main_rmse_summary():
             ax.legend(loc='upper left')
     
     fig.suptitle('Post-Assimilation RMSE Comparison\n'
-                 'All Architectures (MLP, GRU, LSTM) Averaged | Single Metric Focus per Hans',
+                 'All Architectures (MLP, GRU, LSTM) Averaged | Single Metric Focus',
                  fontsize=13, fontweight='bold')
     
     plt.tight_layout()

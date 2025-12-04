@@ -70,8 +70,8 @@ def plot_lobe_occupancy_detailed():
                         })
         df = pd.DataFrame(data)
     
-    # Create figure with explicit specifications
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    # Create figure with explicit specifications - extra width for colorbar
+    fig, axes = plt.subplots(2, 2, figsize=(16, 10))
     axes = axes.flatten()
     
     noise_levels = [0.05, 0.1, 0.5, 1.0]
@@ -120,9 +120,11 @@ def plot_lobe_occupancy_detailed():
         ax.set_title(f'Noise Level: σ = {noise}\nAll Architectures Aggregated',
                     fontsize=11, fontweight='bold')
     
-    # Add colorbar
-    fig.colorbar(im, ax=axes, label='Lobe Occupancy Discrepancy (Δ_lobe)', 
-                location='right', shrink=0.8)
+    # Add colorbar - positioned outside the subplots to avoid overlap
+    fig.subplots_adjust(right=0.85)
+    cbar_ax = fig.add_axes([0.88, 0.15, 0.03, 0.7])
+    cbar = fig.colorbar(im, cax=cbar_ax)
+    cbar.set_label('Lobe Occupancy Discrepancy (Δ_lobe)', fontsize=11)
     
     # MAIN TITLE with full specifications - Addresses ID 113 & 114
     fig.suptitle('Lobe Occupancy Discrepancy Across All Conditions\n'
@@ -130,7 +132,8 @@ def plot_lobe_occupancy_detailed():
                  'Lower values (green) indicate better attractor geometry preservation',
                  fontsize=12, fontweight='bold', y=1.02)
     
-    plt.tight_layout()
+    # Adjust layout - don't use tight_layout since we manually positioned colorbar
+    plt.subplots_adjust(top=0.88, hspace=0.3, wspace=0.25)
     
     output_path = os.path.join(OUTPUT_DIR, 'lobe_occupancy_detailed.png')
     plt.savefig(output_path, dpi=150, bbox_inches='tight')
