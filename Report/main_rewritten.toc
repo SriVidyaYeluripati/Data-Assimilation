@@ -1,0 +1,71 @@
+\contentsline {section}{Abstract}{3}{Doc-Start}%
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Notation and Definitions}{5}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Project Scope and Aims}{6}{subsection.1.2}%
+\contentsline {paragraph}{Architectural Benchmarking.}{6}{subsection.1.2}%
+\contentsline {paragraph}{Observation Mode Sensitivity.}{6}{subsection.1.2}%
+\contentsline {paragraph}{Noise Tolerance.}{7}{subsection.1.2}%
+\contentsline {paragraph}{Background Conditioning Strategy.}{7}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Contributions and Limitations}{7}{subsection.1.3}%
+\contentsline {paragraph}{(i)}{7}{subsection.1.3}%
+\contentsline {paragraph}{(ii)}{7}{subsection.1.3}%
+\contentsline {paragraph}{(iii)}{7}{subsection.1.3}%
+\contentsline {paragraph}{(iv)}{8}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Mathematical Formulation}{9}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The Variational Principle in Data Assimilation}{9}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}The Analysis Functional}{10}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Self-Supervised Learning Objective}{10}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}The Lorenz-63 System}{11}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Observation Operators}{11}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Methods and Experimental Setup}{13}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Data Generation}{13}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Background Statistics}{13}{subsection.3.2}%
+\contentsline {paragraph}{FixedMean Regime.}{13}{subsection.3.2}%
+\contentsline {paragraph}{Resample Regime.}{14}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Neural Network Architectures}{14}{subsection.3.3}%
+\contentsline {paragraph}{Baseline MLP (No-Mean).}{15}{table.4}%
+\contentsline {paragraph}{MLP.}{15}{table.4}%
+\contentsline {paragraph}{GRU and LSTM.}{15}{table.4}%
+\contentsline {subsection}{\numberline {3.4}Training Procedure}{15}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Evaluation Metrics}{16}{subsection.3.5}%
+\contentsline {paragraph}{Improvement relative to background (primary).}{16}{equation.3.9}%
+\contentsline {paragraph}{Improvement relative to FixedMean (secondary).}{16}{equation.3.10}%
+\contentsline {subsection}{\numberline {3.6}Reproducibility}{17}{subsection.3.6}%
+\contentsline {section}{\numberline {4}Experiments and Results}{18}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Convergence and Training Dynamics}{18}{subsection.4.1}%
+\contentsline {paragraph}{Divergence Rates.}{19}{figure.5}%
+\contentsline {subsection}{\numberline {4.2}Resample Regime: Accuracy and Stability}{19}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Observation Mode Sensitivity}{20}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Temporal Dynamics and Attractor Geometry}{22}{subsection.4.4}%
+\contentsline {paragraph}{Attractor Geometry.}{23}{figure.9}%
+\contentsline {paragraph}{Lobe Occupancy.}{24}{figure.10}%
+\contentsline {subsection}{\numberline {4.5}Ablation Studies}{25}{subsection.4.5}%
+\contentsline {paragraph}{Background Sampling Strategy.}{26}{subsection.4.5}%
+\contentsline {paragraph}{Background Covariance Sensitivity.}{26}{figure.12}%
+\contentsline {paragraph}{Summary of Practical Recommendations.}{26}{figure.12}%
+\contentsline {section}{\numberline {5}Discussion}{28}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Architectural Comparisons: Inconclusive Evidence}{28}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}The Importance of Stochastic Regularization}{28}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Failure Modes and Their Implications}{29}{subsection.5.3}%
+\contentsline {paragraph}{Attractor Escape.}{29}{subsection.5.3}%
+\contentsline {paragraph}{Lobe Imbalance.}{29}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Limitations and Caveats}{29}{subsection.5.4}%
+\contentsline {paragraph}{Low Dimensionality.}{29}{subsection.5.4}%
+\contentsline {paragraph}{Lack of Classical Baselines.}{29}{subsection.5.4}%
+\contentsline {paragraph}{Single System, Single Loss.}{29}{subsection.5.4}%
+\contentsline {paragraph}{Statistical Power.}{29}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Outlook}{30}{section.6}%
+\contentsline {paragraph}{Extension to Higher-Dimensional Systems.}{30}{section.6}%
+\contentsline {paragraph}{Hybrid Approaches.}{30}{section.6}%
+\contentsline {paragraph}{Probabilistic Extensions.}{30}{section.6}%
+\contentsline {paragraph}{Semi-Supervised Learning.}{30}{section.6}%
+\contentsline {paragraph}{Observational Strategies.}{30}{section.6}%
+\contentsline {section}{References}{31}{section.6}%
+\contentsline {section}{Appendix}{32}{section.6}%
+\contentsline {subsection}{A.1 Data and Pipeline Extras}{32}{section*.1}%
+\contentsline {subsection}{A.2 Training Dynamics}{34}{figure.14}%
+\contentsline {subsection}{A.3 Extended Attractor Geometry Diagnostics}{40}{figure.24}%
+\contentsline {subsection}{A.4 Extended Resample Metrics}{47}{figure.30}%
+\contentsline {subsection}{A.5 Observation-Mode Diagnostics}{51}{figure.34}%
+\contentsline {subsection}{A.6 Trajectory and Residual Reconstructions}{53}{figure.37}%
+\contentsline {subsection}{A.7 Ablation Studies}{56}{figure.40}%

@@ -1,0 +1,15 @@
+results/
+├── baseline/
+│   ├── baseline_no_mean_20251025_212806/
+│   │   ├── figures/   # Loss curves, reconstructions, diagnostics
+│   │   └── metrics/   # RMSE tables, JSON histories
+├── fixedmean/
+│   ├── run_20251008_133752/
+│   │   ├── figures/
+│   │   ├── metrics/
+│   │   └── models/    # Saved .pth model weights
+├── resample/
+│   ├── run_20251008_134240/
+│   │   ├── figures/
+│   │   ├── metrics/
+│   │   └── models/
