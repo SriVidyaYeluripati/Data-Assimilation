@@ -7,7 +7,7 @@ small improvements that may be masked by outliers in RMSE.
 
 RMDSE = sqrt(median((x_true - x_estimate)^2))
 
-Created for Phase 2 analysis based on Hans's suggestion.
+Created for Phase 2 analysis to provide a robust metric comparison.
 """
 
 import numpy as np
@@ -15,24 +15,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 import os
+import glob
 
 # Set up paths
 REPO_ROOT = Path("/home/runner/work/Data-Assimilation/Data-Assimilation")
 RESULTS_DIR = REPO_ROOT / "results"
 OUTPUT_DIR = REPO_ROOT / "Report" / "figures_new"
 
-# Find the resample diagnostics directory (has space in name)
+# Find the resample diagnostics directory (may have space in name)
 RESAMPLE_DIAG = None
-for p in RESULTS_DIR.glob("resample*/run_*/diagnostics"):
-    RESAMPLE_DIAG = p
-    break
 
-if RESAMPLE_DIAG is None:
-    # Try with space in name
-    import glob
-    paths = glob.glob(str(RESULTS_DIR / "resample */run_*/diagnostics"))
+# Try direct glob with space handling
+diag_patterns = [
+    str(RESULTS_DIR) + "/resample*/run_*/diagnostics",
+    str(RESULTS_DIR) + "/resample */run_*/diagnostics",
+]
+
+for pattern in diag_patterns:
+    paths = glob.glob(pattern)
     if paths:
         RESAMPLE_DIAG = Path(paths[0])
+        break
+
+# Also try to find any diagnostics directory
+if RESAMPLE_DIAG is None:
+    all_diags = glob.glob(str(RESULTS_DIR) + "/**/diagnostics", recursive=True)
+    if all_diags:
+        RESAMPLE_DIAG = Path(all_diags[0])
 
 print(f"Diagnostics directory: {RESAMPLE_DIAG}")
 

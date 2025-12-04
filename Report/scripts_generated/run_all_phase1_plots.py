@@ -23,6 +23,7 @@ SCRIPTS = [
     'plot_rmse_consolidated.py',         # ID 111: Consolidate plots
     'plot_main_rmse_summary.py',         # Single metric focus (Hans's main guidance)
     'plot_classical_da_annotated.py',    # ID 57: Source and Phi label
+    'plot_rmdse_comparison.py',          # RMDSE analysis (robust metric comparison)
 ]
 
 def main():
