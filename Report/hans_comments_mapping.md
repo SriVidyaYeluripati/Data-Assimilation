@@ -102,6 +102,26 @@ The following table maps Hans's PDF annotations (page 4 comments) to the exact l
 | 111, 112, 113, 114 | Figure caption details | Mode/noise/model specifications added where applicable |
 | 118 | "no control, maybe test smaller steps" | Noted for future work |
 
+## Phase 1: Corrected Figures (Hans-Commented Original Figures)
+
+The following ORIGINAL figures from `main (3).tex` have been regenerated with Hans's corrections:
+
+| Corrected Figure | Original Figure | Hans Comments Addressed |
+|------------------|-----------------|------------------------|
+| `figures_new/4_3a_resample_rmse_distributions_logscale.png` | `4_3a_resample_rmse_distributions.png` | #105: "can you make it a log plot?" + added model labels (MLP, GRU, LSTM) |
+| `figures_new/4_4a_post_assimilation_rmse_logscale.png` | `4_4a_post_assimilation_rmse.png` | #105: log scale + clear observation mode notation: $h(x)=x_1$, $h(x)=(x_1,x_2)$, $h(x)=x_1^2$ |
+| `figures_new/4_5a_trajectory_fidelity_corrected.png` | `4_5a_trajectory_fidelity_comparison.png` | $f_\theta$ notation (not $\Phi$), clear Truth/Analysis/Background labels |
+| `figures_new/4_5b_error_evolution_profiles_corrected.png` | `4_5b_error_evolution_profiles.png` | Regime comparison (Resample vs FixedMean), noise level annotations |
+| `figures_new/4_6a_background_sampling_stability_corrected.png` | `4_6a_background_sampling_stability.png` | Clear stability labels, regime comparison, log scale on x-axis |
+
+### Scripts Generated (`Report/scripts_generated/`)
+- `plot_4_3a_rmse_distributions_logscale.py` - Log-scale boxplots per architecture
+- `plot_4_4a_obs_mode_rmse_logscale.py` - Log-scale boxplots per observation mode
+- `plot_4_5a_trajectory_fidelity.py` - 3D trajectory comparison
+- `plot_4_5b_error_evolution.py` - Error evolution profiles
+- `plot_4_6a_stability.py` - Stability comparison
+- `generate_all_corrected_figures.py` - Master script
+
 ## Style Improvements Summary
 
 1. **Removed all bullet lists** except for algorithmic summaries and table contents
@@ -114,16 +134,6 @@ The following table maps Hans's PDF annotations (page 4 comments) to the exact l
 8. **Pilot study framing** - not overselling contributions
 9. **Clear transitions** between sections and paragraphs
 10. **Consistent mathematical notation** throughout
-
-## New Figures Generated
-
-| Figure | Description | Addresses |
-|--------|-------------|-----------|
-| `attractor_projection_new.png` | Full Lorenz attractor with 100,000 data points showing butterfly pattern | Visualization quality |
-| `trajectory_sample_new.png` | State reconstruction showing Truth vs Analysis vs Background | Data clarity |
-| `rmse_comparison_new.png` | RMSE across noise levels | Standard metric |
-| `rmse_boxplot_logscale.png` | Log-scale boxplot for outlier visualization | Hans comment #105 |
-| `rmse_vs_rmdse_comparison.png` | RMSE vs RMdSE comparison showing how RMdSE (robust) is more stable than RMSE when outliers exist | Meeting discussion: handling outliers in performance metrics |
 
 ## Appendix Status
 
