@@ -261,7 +261,7 @@ This document systematically compares each of Hans's PDF comments and meeting po
 | Figure 4 | `Backgroundstats.png` | - | Background stats (unchanged) |
 | Figure 5 | `Dataset.png` | - | Dataset distribution (unchanged) |
 | **Figure 6** | `pipe_eval.png` | **"This is very nice"** | ✓ Pipeline diagram **KEPT** |
-| Figure 7 | `4_2k_mean_convergence_envelopes.png` | - | Convergence envelopes |
+| **Figure 7** | `4_2k_mean_convergence_envelopes.png` | Caption values corrected | ✓ **NEW**: `4_2k_mean_convergence_envelopes_corrected.png` (Resample: 1.5%, FixedMean: 25%, Baseline: 89%) |
 | **Figure 8** | `4_3a_resample_rmse_distributions.png` | **"can you make it a log plot?"** | ✓ **NEW**: `4_3a_resample_rmse_distributions_logscale.png` |
 | Figure 9 | `4_3b_delta_rmse_noise.png` | - | Delta RMSE vs noise |
 | Figure 10 | `4_3d_stability_vs_noise.png` | - | Stability vs noise |

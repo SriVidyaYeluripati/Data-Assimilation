@@ -9,6 +9,7 @@ These figures directly correspond to figures in `main (3).tex`, with Hans's requ
 
 | New Figure | Original | Hans Comments Addressed |
 |------------|----------|------------------------|
+| `4_2k_mean_convergence_envelopes_corrected.png` | `4_2k_mean_convergence_envelopes.png` | Figure 7: Corrected values (Resample: 1.5%, FixedMean: 25%, Baseline: 89%) |
 | `4_3a_resample_rmse_distributions_logscale.png` | `4_3a_resample_rmse_distributions.png` | #105: Log scale, model labels, noise levels |
 | `4_4a_post_assimilation_rmse_logscale.png` | `4_4a_post_assimilation_rmse.png` | Log scale, h(x) notation |
 | `4_5a_trajectory_fidelity_corrected.png` | `4_5a_trajectory_fidelity_comparison.png` | f_θ notation, clear legend |

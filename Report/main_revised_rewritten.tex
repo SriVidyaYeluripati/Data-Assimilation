@@ -462,8 +462,8 @@ The convergence behavior across training regimes reveals substantial differences
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.8\textwidth]{4_2k_mean_convergence_envelopes.png}
-\caption{Mean convergence envelopes across training regimes. The Resample regime (blue) achieves the fastest and most stable convergence, reducing loss to approximately 20\% of the initial value within the first epoch. FixedMean (orange) shows rapid initial descent but exhibits instability at high noise levels during evaluation. Baseline (green) converges slowly, retaining approximately 90\% of initial error after 30 epochs. Shaded regions indicate standard deviation across observation modes and noise levels.}
+\includegraphics[width=0.8\textwidth]{figures_new/4_2k_mean_convergence_envelopes_corrected.png}
+\caption{Mean convergence envelopes across training regimes. The Resample regime (blue) achieves the fastest and most stable convergence, reducing loss to approximately 1.5\% of the initial value by epoch 30. FixedMean (orange) shows rapid initial descent, stabilizing at approximately 25\% of initial loss, but exhibits instability at high noise levels during evaluation. Baseline (green) converges slowly, retaining approximately 89\% of initial error after 30 epochs. Shaded regions indicate standard deviation across observation modes and noise levels.}
 \label{fig:convergence_envelopes}
 \end{figure}
 
