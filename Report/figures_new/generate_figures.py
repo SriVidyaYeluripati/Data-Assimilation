@@ -117,6 +117,41 @@ def compute_rmdse(pred, truth):
     return np.sqrt(np.median((pred - truth) ** 2))
 
 
+def compute_sample_wise_rmse(truth, analysis):
+    """
+    Compute per-sample RMSE values for boxplot distributions.
+    
+    Handles different array shapes:
+    - 3D arrays: (n_trajectories, n_timesteps, state_dim)
+    - 2D arrays: (n_samples, state_dim) or (n_timesteps, state_dim)
+    - 1D arrays: flattened data
+    
+    Parameters
+    ----------
+    truth : np.ndarray
+        True state values
+    analysis : np.ndarray
+        Analysis (predicted) state values
+        
+    Returns
+    -------
+    list
+        List of RMSE values, one per sample/trajectory
+    """
+    if len(truth.shape) >= 2:
+        n_samples = truth.shape[0]
+        rmse_samples = []
+        for i in range(n_samples):
+            if len(truth.shape) == 3:
+                sample_rmse = compute_rmse(analysis[i], truth[i])
+            else:
+                sample_rmse = compute_rmse(analysis[i:i+1], truth[i:i+1])
+            rmse_samples.append(sample_rmse)
+        return rmse_samples
+    else:
+        return [compute_rmse(analysis, truth)]
+
+
 def generate_rmse_comparison():
     """
     Generate RMSE comparison across noise levels and observation modes.
@@ -282,18 +317,8 @@ def generate_rmse_boxplot_logscale():
                 truth, analysis, background = load_baseline_results(mode, noise)
                 
                 # Compute per-sample RMSE (not aggregated)
-                if len(truth.shape) >= 2:
-                    n_samples = truth.shape[0]
-                    rmse_samples = []
-                    for i in range(n_samples):
-                        if len(truth.shape) == 3:
-                            sample_rmse = compute_rmse(analysis[i], truth[i])
-                        else:
-                            sample_rmse = compute_rmse(analysis[i:i+1], truth[i:i+1])
-                        rmse_samples.append(sample_rmse)
-                    all_rmse.append(rmse_samples)
-                else:
-                    all_rmse.append([compute_rmse(analysis, truth)])
+                rmse_samples = compute_sample_wise_rmse(truth, analysis)
+                all_rmse.append(rmse_samples)
                     
                 positions.append(noise_idx + 1)
                 labels.append(f'{noise}')
@@ -301,7 +326,7 @@ def generate_rmse_boxplot_logscale():
                 continue
         
         if all_rmse:
-            bp = axes[idx].boxplot(all_rmse, positions=positions, widths=0.6)
+            axes[idx].boxplot(all_rmse, positions=positions, widths=0.6)
             axes[idx].set_yscale('log')
             axes[idx].set_xlabel(r'Observation noise $\sigma_{\mathrm{obs}}$')
             axes[idx].set_title(f'Mode: {mode}')

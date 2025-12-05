@@ -484,7 +484,7 @@ Having established that the Resample regime provides the most stable training dy
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{4_3a_resample_rmse_distributions.png}
-\caption{Post-assimilation RMSE distributions for MLP, GRU, and LSTM across noise levels in the Resample regime ($xy$ mode). Box plots show median, interquartile range, and outliers on a logarithmic scale. All models maintain stable accuracy for $\sigma_{\text{obs}} \leq 0.1$ (median RMSE $\approx 4$--5), with dispersion increasing at higher noise.}
+\caption{Post-assimilation RMSE distributions for MLP, GRU, and LSTM across noise levels in the Resample regime ($xy$ mode). Box plots show median, interquartile range, and outliers. All models maintain stable accuracy for $\sigma_{\text{obs}} \leq 0.1$ (median RMSE $\approx 4$--5), with dispersion increasing at higher noise. For distributions with extreme outliers, logarithmic y-axis is recommended (see figures\_new/rmse\_boxplot\_logscale.png).}
 \label{fig:resample_rmse}
 \end{figure}
 
@@ -528,7 +528,7 @@ The structure of the observation operator substantially affects reconstruction a
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{4_4a_post_assimilation_rmse.png}
-\caption{Post-assimilation RMSE distributions for all observation modes as a function of noise level $\sigma_{\text{obs}}$, aggregated across architectures. The $xy$ mode achieves the lowest and most stable errors (median RMSE $\approx 4$), followed by $x$ ($\approx 4$--5), while $x^2$ exhibits markedly higher dispersion and error magnitudes ($\approx 5$--10) due to nonlinear noise amplification. Note: logarithmic y-axis recommended for visualizing outlier structure.}
+\caption{Post-assimilation RMSE distributions for all observation modes as a function of noise level $\sigma_{\text{obs}}$, aggregated across architectures. The $xy$ mode achieves the lowest and most stable errors (median RMSE $\approx 4$), followed by $x$ ($\approx 4$--5), while $x^2$ exhibits markedly higher dispersion and error magnitudes ($\approx 5$--10) due to nonlinear noise amplification. For distributions with extreme outliers from catastrophic failures, a log-scale version is available in figures\_new/rmse\_boxplot\_logscale.png.}
 \label{fig:obs_mode_rmse}
 \end{figure}
 
