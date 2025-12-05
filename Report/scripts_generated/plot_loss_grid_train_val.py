@@ -31,27 +31,48 @@ ARCH_LABELS = {'mlp': 'MLP', 'gru': 'GRU', 'lstm': 'LSTM'}
 # Paths
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
-RESAMPLE_DIR = REPO_ROOT / "results" / "resample " / "run_20251008_134240 " / "metrics"
 FIGURES_DIR = SCRIPT_DIR.parent / "figures_new"
 FIGURES_DIR.mkdir(exist_ok=True)
 
 
+def find_resample_metrics_dir():
+    """Find the resample metrics directory, handling path variations."""
+    results_dir = REPO_ROOT / "results"
+    
+    # Try different path patterns
+    patterns = [
+        results_dir / "resample " / "run_20251008_134240 " / "metrics",
+        results_dir / "resample" / "run_20251008_134240" / "metrics",
+    ]
+    
+    for pattern in patterns:
+        if pattern.exists():
+            return pattern
+    
+    # Try to find any resample directory with metrics
+    for resample_dir in results_dir.glob("resample*"):
+        for run_dir in resample_dir.glob("run_*"):
+            metrics_dir = run_dir / "metrics"
+            if metrics_dir.exists():
+                return metrics_dir
+    
+    return patterns[0]  # Return default if not found
+
+
+RESAMPLE_DIR = find_resample_metrics_dir()
+
+
 def load_loss_data(mode, arch, noise):
     """Load training and validation loss for a configuration."""
-    # Try multiple path formats
     noise_str = f"n{noise}_R{noise}"
     filename = f"loss_{mode}_{arch}_{noise_str}.json"
     filepath = RESAMPLE_DIR / filename
-    
-    if not filepath.exists():
-        # Try without space in path
-        alt_dir = REPO_ROOT / "results" / "resample" / "run_20251008_134240" / "metrics"
-        filepath = alt_dir / filename
     
     if filepath.exists():
         with open(filepath) as f:
             data = json.load(f)
         return data.get('train_loss', []), data.get('val_loss', [])
+    
     
     return None, None
 
