@@ -106,7 +106,7 @@ Classical data assimilation methods rely on knowledge of the physical model and 
 Machine learning-based data assimilation, such as the AI-Var framework introduced by Fablet et al.\ \cite{ai_da_fablet}, replaces explicit variational optimization with a learned surrogate. A parametric neural network $f_\theta$ is trained to approximate the analysis functional $\Phi$---the mapping from observations $y$, background information $(\bar{x}, B)$, and observation statistics $(h, R)$ to the MAP state estimate $x^a$ that minimizes the 3D-Var cost. While training with re-analysis data is a common option, this study instead investigates self-supervised training: the network learns by minimizing the variational cost directly, without access to ground truth or re-analysis labels. The true state $x_{\text{true}}$, available here due to the nature of the simulation study, is used only for offline evaluation and never during training.
 
 \noindent
-A critical challenge in this problem setting is that the true state is unobservable in operational applications, requiring the network to learn from the combination of both sources of information---observations and background forecasts---rather than from supervised labels. This pilot study systematically investigates how different neural architectures approximate the analysis functional within a sequential adaptation of the AI-Var framework, testing the hypothesis that temporal sequence modeling may enhance stability and coherence in chaotic, partially observed systems. The investigation is conducted via a controlled simulation study on the Lorenz-63 system, which provides ground truth trajectories for rigorous evaluation.
+A critical challenge in this problem setting is that the true state is unobservable in operational applications, requiring the network to learn from the combination of both sources of information---observations and background forecasts---rather than from supervised labels. This pilot study systematically investigates how different neural architectures approximate the analysis functional within a sequential adaptation of the AI-Var framework, testing the hypothesis that temporal sequence modeling may enhance stability and coherence in chaotic, partially observed systems. The investigation is conducted via a controlled simulation study on the Lorenz-63 system, which provides ground truth trajectories for quantitative evaluation.
 
 \subsection{Notation and Definitions}
 \label{sec:notation}
@@ -225,7 +225,7 @@ x^a = \arg\min_x J(x).
 \end{equation}
 When $h$ is linear (i.e., $h(x) = Hx$ for some matrix $H$), the cost function is quadratic and the minimizer admits a closed-form solution. In nonlinear cases, iterative methods such as gradient descent or quasi-Newton algorithms are required.
 
-The covariance matrices $B$ and $R$ encode critical information about the relative reliability of background and observations. To provide available knowledge about the underlying system, these matrices must be specified or estimated: $B$ is typically derived from ensemble statistics or climatological data, while $R$ is determined by instrument characteristics. In this study, $B$ is computed empirically from an ensemble of Lorenz-63 trajectories, and $R = \sigma_{\text{obs}}^2 I$ is diagonal with variance determined by the noise level.
+The covariance matrices $B$ and $R$ encode critical information about the relative reliability of background and observations. To provide available knowledge about the underlying system, these matrices must be specified or estimated: $B$ is typically derived from long-term ensemble statistics from the attractor, while $R$ is determined by instrument characteristics. In this study, $B$ is computed empirically from an ensemble of Lorenz-63 trajectories, and $R = \sigma_{\text{obs}}^2 I$ is diagonal with variance determined by the noise level.
 
 \subsection{The Analysis Functional}
 \label{sec:functional}
@@ -259,7 +259,7 @@ Expanding the loss explicitly:
 \end{equation}
 where $\hat{x}^a_t = f_\theta(\bar{x}_t, y_{t-L+1:t})$ is the network output.
 
-This formulation is \emph{self-supervised}: no ground truth state $x^{\text{true}}$ or pre-computed analysis $x^a$ is required during training. The network learns to balance the two terms of the cost function through gradient descent, effectively learning the structure of the variational problem from data. The true state is used only for offline evaluation metrics such as RMSE, enabling rigorous assessment of reconstruction accuracy without introducing supervised bias during training.
+This formulation is \emph{self-supervised}: no ground truth state $x^{\text{true}}$ or pre-computed analysis $x^a$ is required during training. The network learns to balance the two terms of the cost function through gradient descent, effectively learning the structure of the variational problem from data. The true state is used only for offline evaluation metrics such as RMSE, enabling systematic assessment of reconstruction accuracy without introducing supervised bias during training.
 
 For numerical stability, we solve the linear systems involving $B^{-1}$ and $R^{-1}$ via Cholesky factorization rather than explicit matrix inversion. The background covariance $B$ is regularized as $B \leftarrow B + \varepsilon I$ with $\varepsilon = 10^{-6}$ to ensure positive definiteness.
 
@@ -333,11 +333,11 @@ The dataset is partitioned into 1000 training trajectories and 500 test trajecto
 \subsection{Background Statistics}
 \label{sec:background}
 
-Background priors are generated from an independent climatological ensemble. Concretely, an ensemble of size $E = 10000$ is constructed by sampling states from a long Lorenz-63 trajectory at intervals exceeding the decorrelation time. The climatological mean $\bar{x}_{\text{clim}}$ and covariance $B_{\text{clim}}$ are computed from this ensemble.
+Background priors are generated from an independent long-term ensemble. Concretely, an ensemble of size $E = 10000$ is constructed by sampling states from a long Lorenz-63 trajectory at intervals exceeding the decorrelation time. The background ensemble mean $\bar{x}_{\text{ens}}$ and covariance $B_{\text{ens}}$ are computed from this ensemble.
 
 Two background conditioning regimes are investigated:
 
-\paragraph{FixedMean Regime.} The background mean $\bar{x}$ and covariance $B$ are set to the static climatological values $(\bar{x}_{\text{clim}}, B_{\text{clim}})$ and remain constant throughout training. This configuration stresses the network by forcing it to correct from a fixed, potentially biased prior.
+\paragraph{FixedMean Regime.} The background mean $\bar{x}$ and covariance $B$ are set to the static ensemble values $(\bar{x}_{\text{ens}}, B_{\text{ens}})$ and remain constant throughout training. This configuration stresses the network by forcing it to correct from a fixed, potentially biased prior.
 
 \paragraph{Resample Regime.} At each training minibatch, $m = 32$ ensemble members are sampled (with replacement) and the batch background mean $\bar{x}$ and empirical covariance $B$ are computed from those samples. This stochastic variability acts as data-level regularization, preventing the model from overfitting to a single background realization and forcing it to learn a generalized correction functional.
 
@@ -391,7 +391,7 @@ Each model-regime pair is trained independently for every combination of observa
 \label{sec:metrics}
 
 \noindent
-The primary quantitative metric is the root mean square error (RMSE) between the network output and true state:
+The primary quantitative metric is the root mean square error (RMSE) between the network output and true state. RMSE is the main evaluation metric used throughout this study:
 \begin{equation}
 \text{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N} \|\hat{x}^a_i - x^{\text{true}}_i\|^2},
 \label{eq:rmse}
@@ -399,12 +399,12 @@ The primary quantitative metric is the root mean square error (RMSE) between the
 computed over all three state components and averaged across test trajectories ($K = 500$ trajectories $\times$ $S = 3$ noise realizations per trajectory $= 1500$ samples).
 
 \noindent
-When distributions exhibit heavy tails due to catastrophic failures such as attractor escape, we additionally report the \emph{Root Median Squared Error} (RMdSE):
+When distributions exhibit heavy tails due to catastrophic failures such as attractor escape, we additionally report the \emph{Root Median Squared Error} (RMdSE) as a robustness check:
 \begin{equation}
 \text{RMdSE} = \sqrt{\text{median}_{i} \|\hat{x}^a_i - x^{\text{true}}_i\|^2},
 \label{eq:rmdse}
 \end{equation}
-which provides a robust alternative to RMSE that is less sensitive to outliers. RMdSE characterizes typical performance even when a small fraction of runs diverge catastrophically. Boxplot visualizations employ logarithmic y-axes to better reveal the distribution structure when outliers span multiple orders of magnitude.
+which provides a robust alternative to RMSE that is less sensitive to outliers. RMdSE is used only as a supporting diagnostic when heavy tails from divergent runs would otherwise distort the mean; it does not change the main conclusions based on RMSE. Boxplot visualizations employ logarithmic y-axes to better reveal the distribution structure when outliers span multiple orders of magnitude.
 
 \noindent
 Two improvement metrics contextualize RMSE gains:
@@ -628,7 +628,7 @@ Targeted ablation studies investigate sensitivity to key design parameters.
 \label{fig:background_stability}
 \end{figure}
 
-The most critical finding of this study concerns regime stability. The FixedMean approach, which uses a static climatological background throughout training, fails catastrophically in 94\% of configurations. Only 2 out of 36 FixedMean configurations produce bounded trajectories; the remainder diverge with RMSE values exceeding 100. In contrast, the Resample regime achieves 100\% success, producing stable, bounded analysis estimates across all configurations. This finding strongly motivates the use of stochastic background updates for neural network-based data assimilation.
+The most critical finding of this study concerns regime stability. The FixedMean approach, which uses a static background mean throughout training, fails catastrophically in 94\% of configurations. Only 2 out of 36 FixedMean configurations produce bounded trajectories; the remainder diverge with RMSE values exceeding 100. In contrast, the Resample regime achieves 100\% success, producing stable, bounded analysis estimates across all configurations. This finding strongly motivates the use of stochastic background updates for neural network-based data assimilation.
 
 \paragraph{Background Covariance Sensitivity.} The system's sensitivity to misspecification of $B$ was tested by scaling the true covariance by a factor $\lambda$. Results (see Appendix Figure~\ref{fig:app_B_scaling}) show a characteristic U-shaped error curve with minimum at $\lambda = 1.0$, confirming that the network learns the structure of the variational problem. Resample demonstrates substantially higher tolerance to $B$ misestimation than FixedMean.
 
@@ -677,7 +677,7 @@ These results do not conclusively establish that temporal context is necessary o
 \subsection{The Importance of Stochastic Regularization}
 
 \noindent
-The clearest finding concerns background conditioning strategy. The Resample regime achieved 100\% success rate across all 36 configurations, whereas FixedMean failed catastrophically in 94\% of cases (34/36 configurations). This stark difference demonstrates that stochastic background resampling is not merely beneficial but \emph{essential} for stable learning in this setting.
+The clearest finding concerns background conditioning strategy. \emph{Stochastic regularization}, in this context, refers to drawing different background means (and optionally covariances) from the ensemble at each training step, so that the network cannot overfit to a single fixed prior and instead learns a correction functional that is stable to background perturbations. The Resample regime achieved 100\% success rate across all 36 configurations, whereas FixedMean failed catastrophically in 94\% of cases (34/36 configurations). This stark difference demonstrates that stochastic background resampling is not merely beneficial but \emph{essential} for stable learning in this setting.
 
 \noindent
 This pattern suggests that stochastic background resampling provides a form of implicit regularization that prevents the network from overfitting to a single prior realization. By exposing the model to diverse background configurations during training, Resample forces the learned functional to generalize across the distribution of possible priors, rather than memorizing corrections specific to a fixed background. This interpretation aligns with general principles of dropout and data augmentation in deep learning, applied here at the level of the data assimilation inputs.
@@ -898,6 +898,13 @@ This section contains detailed loss curves and convergence diagnostics reference
 \includegraphics[width=0.9\textwidth]{4_2j_delta_rmse_improvement.png}
 \caption{(Appendix) $\Delta$RMSE improvement comparison between regimes. FixedMean achieves larger effective reduction than Baseline, especially at higher noise scenarios ($\sigma = 0.5$--1.0).}
 \label{fig:app_delta_improvement}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures_new/training_validation_loss_grid.png}
+\caption{(Appendix) Training and validation loss convergence grid for the Resample regime. Rows correspond to observation modes ($h(x)=x_1$, $h(x)=(x_1,x_2)$, $h(x)=x_1^2$); columns correspond to noise levels ($\sigma_{\text{obs}} \in \{0.05, 0.1, 0.5, 1.0\}$). Solid lines show training loss; dashed lines show validation loss. All architectures (MLP, GRU, LSTM) converge smoothly across all configurations. This figure is a supporting diagnostic and does not change the main conclusions based on RMSE.}
+\label{fig:app_loss_grid}
 \end{figure}
 
 \newpage
