@@ -64,8 +64,8 @@ def load_results(regime_dir, mode, arch, noise):
 
 def collect_metrics():
     """Collect RMSE and RMdSE across all configurations."""
-    rmse_data = {mode: {n: [] for n in NOISE_LEVELS} for mode in MODES}
-    rmdse_data = {mode: {n: [] for n in NOISE_LEVELS} for mode in MODES}
+    rmse_data = {mode: {} for mode in MODES}
+    rmdse_data = {mode: {} for mode in MODES}
     
     for mode in MODES:
         for noise in NOISE_LEVELS:

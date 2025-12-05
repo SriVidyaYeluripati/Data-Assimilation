@@ -14,7 +14,6 @@ Output: figures_new/rmse_boxplot_logscale.png
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-import json
 
 # Repository paths
 SCRIPT_DIR = Path(__file__).parent
@@ -25,7 +24,6 @@ FIGURES_NEW_DIR = REPO_ROOT / "Report" / "figures_new"
 # Directory paths (note: some have trailing spaces in original data)
 RESAMPLE_DIR = RESULTS_DIR / "resample " / "run_20251008_134240 "
 BASELINE_DIR = RESULTS_DIR / "baseline"
-FIXEDMEAN_DIR = RESULTS_DIR / "fixedmean "
 
 # Ensure output directory exists
 FIGURES_NEW_DIR.mkdir(exist_ok=True)

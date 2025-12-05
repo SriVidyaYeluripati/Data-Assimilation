@@ -30,7 +30,11 @@ ARCHITECTURES = ['mlp', 'gru', 'lstm']
 
 
 def load_loss_data(mode, arch, noise):
-    """Load loss data from JSON files."""
+    """Load loss data from JSON files.
+    
+    Note: Resample regime files use pattern loss_{mode}_{arch}_n{noise}_R{noise}.json
+    where both n and R parameters encode the noise level (n=observation noise, R=covariance scaling).
+    """
     patterns = [
         RESAMPLE_DIR / f"loss_{mode}_{arch}_n{noise}_R{noise}.json",
         BASELINE_DIR / f"loss_{mode}_n{noise}.json",
