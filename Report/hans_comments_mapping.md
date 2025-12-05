@@ -29,7 +29,8 @@ The following table maps Hans's PDF annotations (page 4 comments) to the exact l
 | 71 | "why switch between phi and f?" | Section 1.1 (Notation table) | Added explicit explanation: "Φ is the analysis functional (theoretical optimal mapping); f_θ is its neural network approximation" |
 | 93 | "make very clear how phi and f_theta relate" | Section 1.1 | Created dedicated notation subsection with table explaining the distinction |
 | 94 | "much earlier" (B and R definitions) | Section 1.1 | Moved B and R definitions to notation section at start of paper |
-| 105 | "can you make it a log plot?" | Section 3.5 (Metrics), figures_new/ | Added RMdSE (Root Median Squared Error) as robust alternative; added log-scale boxplot generation script (`rmse_boxplot_logscale.png`); updated figure captions |
+| 105 | "can you make it a log plot?" | Section 3.5 (Metrics), figures_new/ | Created log-scale boxplot (`rmse_boxplot_logscale.png`) with logarithmic y-axis for better visualization of outlier distribution |
+| - | Meeting discussion: robust metrics | Section 3.5 (Metrics), figures_new/ | Added RMdSE (Root Median Squared Error) as robust alternative to RMSE for handling outliers from catastrophic failures; generated comparison figure (`rmse_vs_rmdse_comparison.png`) |
 
 ## Medium Priority Comments
 
@@ -122,7 +123,7 @@ The following table maps Hans's PDF annotations (page 4 comments) to the exact l
 | `trajectory_sample_new.png` | State reconstruction showing Truth vs Analysis vs Background | Data clarity |
 | `rmse_comparison_new.png` | RMSE across noise levels | Standard metric |
 | `rmse_boxplot_logscale.png` | Log-scale boxplot for outlier visualization | Hans comment #105 |
-| `rmse_vs_rmdse_comparison.png` | RMSE vs RMdSE comparison | Meeting discussion on robust metrics |
+| `rmse_vs_rmdse_comparison.png` | RMSE vs RMdSE comparison showing how RMdSE (robust) is more stable than RMSE when outliers exist | Meeting discussion: handling outliers in performance metrics |
 
 ## Appendix Status
 

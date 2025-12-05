@@ -40,6 +40,12 @@ REPO_ROOT = SCRIPT_DIR.parent.parent
 RESULTS_DIR = REPO_ROOT / "results"
 FIGURES_NEW_DIR = SCRIPT_DIR  # Output to same directory as script
 
+# Resample regime results directory (note: directory names have trailing spaces)
+RESAMPLE_DIR = RESULTS_DIR / "resample " / "run_20251008_134240 " / "diagnostics"
+
+# Raw data directory (note: directory name has trailing space)
+RAW_DATA_DIR = REPO_ROOT / "data " / "raw"
+
 # Ensure output directory exists
 FIGURES_NEW_DIR.mkdir(exist_ok=True)
 
@@ -194,30 +200,25 @@ def generate_trajectory_sample():
     
     Output: figures_new/trajectory_sample_new.png
     """
-    # Try to load resample regime data first (has architecture labels)
-    resample_dir = REPO_ROOT / "results" / "resample " / "run_20251008_134240 " / "diagnostics"
-    
     mode = 'xy'
     noise = 0.1
     arch = 'gru'  # Best performing architecture
     
     try:
-        truth_path = resample_dir / f"truth_{mode}_{arch}_n{noise}.npy"
-        analysis_path = resample_dir / f"analysis_{mode}_{arch}_n{noise}.npy"
-        background_path = resample_dir / f"background_{mode}_{arch}_n{noise}.npy"
+        truth_path = RESAMPLE_DIR / f"truth_{mode}_{arch}_n{noise}.npy"
+        analysis_path = RESAMPLE_DIR / f"analysis_{mode}_{arch}_n{noise}.npy"
+        background_path = RESAMPLE_DIR / f"background_{mode}_{arch}_n{noise}.npy"
         
         if truth_path.exists():
             truth = np.load(truth_path)
             analysis = np.load(analysis_path)
             background = np.load(background_path)
-            print(f"Loaded resample regime data: truth shape={truth.shape}")
         else:
             raise FileNotFoundError("Resample data not found")
     except FileNotFoundError:
         # Fall back to baseline
         try:
             truth, analysis, background = load_baseline_results(mode, noise)
-            print(f"Using baseline data: truth shape={truth.shape}")
         except FileNotFoundError:
             print(f"No data found for mode={mode}, noise={noise}")
             return
@@ -270,16 +271,14 @@ def generate_attractor_projection():
     Output: figures_new/attractor_projection_new.png
     """
     # Use raw trajectory data for better visualization
-    raw_data_path = REPO_ROOT / "data " / "raw" / "test_traj.npy"
+    raw_data_path = RAW_DATA_DIR / "test_traj.npy"
     
     try:
         # Load full trajectory data (500 trajectories x 200 timesteps x 3 dims)
         trajectories = np.load(raw_data_path)
-        print(f"Loaded trajectory data: shape={trajectories.shape}")
         
         # Flatten to get all points
         truth_flat = trajectories.reshape(-1, 3)
-        print(f"Flattened shape: {truth_flat.shape}")
         
     except FileNotFoundError:
         print(f"Raw trajectory data not found at {raw_data_path}")
