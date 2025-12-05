@@ -249,6 +249,47 @@ This document systematically compares each of Hans's PDF comments and meeting po
 
 ---
 
+## FIGURE AND TABLE NUMBERING REFERENCE
+
+### Original Document Figure Mapping
+
+| Old Fig # | Old Filename | Hans Comment | New Reference |
+|-----------|--------------|--------------|---------------|
+| Figure 1 | `lorenz.png` | - | Lorenz attractor (unchanged) |
+| Figure 2 | `classical DA.png` | - | 3D-Var concept (unchanged) |
+| Figure 3 | `obsoperators.png` | - | Observation modes (unchanged) |
+| Figure 4 | `Backgroundstats.png` | - | Background stats (unchanged) |
+| Figure 5 | `Dataset.png` | - | Dataset distribution (unchanged) |
+| **Figure 6** | `pipe_eval.png` | **"This is very nice"** | ✓ Pipeline diagram **KEPT** |
+| Figure 7 | `4_2k_mean_convergence_envelopes.png` | - | Convergence envelopes |
+| **Figure 8** | `4_3a_resample_rmse_distributions.png` | **"can you make it a log plot?"** | ✓ **NEW**: `4_3a_resample_rmse_distributions_logscale.png` |
+| Figure 9 | `4_3b_delta_rmse_noise.png` | - | Delta RMSE vs noise |
+| Figure 10 | `4_3d_stability_vs_noise.png` | - | Stability vs noise |
+| Figure 11 | `4_4a_post_assimilation_rmse.png` | Log scale needed | ✓ **NEW**: `4_4a_post_assimilation_rmse_logscale.png` |
+
+### Original Document Table Mapping
+
+| Old Table # | Label | Hans Comment | Status |
+|-------------|-------|--------------|--------|
+| Table 1 | `tab:hyperparams` | - | Unchanged |
+| Table 2 | `tab:arch_summary` | - | Unchanged |
+| Table 3 | `tab:obs_modes` | - | Unchanged |
+| Table 4 | `tab:setup` | - | Unchanged |
+| Table 5 | `tab:resample_stats` | - | Unchanged |
+| Table 6 | `tab:xy_resample` | - | Unchanged |
+| **Table 7** | `tab:recommendations` | **"the table works much better here"**, **"This is very nice and to the point"** | ✓ **KEPT** - referenced in revised |
+
+### Positive Feedback Items (DO NOT CHANGE)
+
+Hans explicitly praised these elements:
+
+1. **Pipeline Diagram (Figure 6)** - "This is very nice" - Kept as-is
+2. **Recommendations Table (Table 7)** - "the table works much better here", "This is very nice and to the point" - Kept as-is  
+3. **Figure 13 structure** - "this is exactly how it should be" - Maintained approach
+4. **Appendix Table** - "this is very useful" - Retained
+
+---
+
 ## SUMMARY
 
 ### Changes Made
