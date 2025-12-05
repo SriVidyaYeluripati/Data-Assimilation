@@ -89,6 +89,7 @@ These results suggest that the AI-Var scheme can be improved with network archit
 \section{Introduction}
 \label{sec:intro}
 
+\noindent
 State estimation in chaotic dynamical systems---crucial for accurate forecasting---is a fundamental challenge in many disciplines in science and engineering, particularly in numerical weather prediction and oceanography. Chaotic systems, epitomized by the Lorenz-63 atmospheric convection model \cite{lorenz_1963}, exhibit sensitive dependence on initial conditions: even infinitesimal perturbations in the initial state grow exponentially over time, rendering long-term deterministic prediction practically impossible. To mitigate this divergence, data assimilation techniques optimally combine noisy observations with the model's short-term forecast (the \emph{background} state) to produce a refined \emph{analysis} state, thereby constraining the estimated trajectory to the true dynamical manifold and reducing forecast uncertainty.
 
 \begin{figure}[H]
@@ -98,15 +99,19 @@ State estimation in chaotic dynamical systems---crucial for accurate forecasting
 \label{fig:lorenz}
 \end{figure}
 
+\noindent
 Classical data assimilation methods rely on knowledge of the physical model and generally assume Gaussian error distributions. Variational approaches such as 3D-Var formulate the analysis problem as minimizing a cost function that balances fidelity to the background forecast against agreement with observations; this requires iterative numerical solvers and depends on accurate specification of the background error covariance matrix $B$ (quantifying uncertainty in the prior forecast) and the observation error covariance matrix $R$ (quantifying measurement uncertainty). Ensemble-based methods such as the Ensemble Kalman Filter \cite{ensemble_methods} employ Monte Carlo sampling to approximate the forecast distribution but still invoke Gaussian approximations at the update step. Both approaches incur substantial computational cost during inference, particularly in high-dimensional operational settings.
 
+\noindent
 Machine learning-based data assimilation, such as the AI-Var framework introduced by Fablet et al.\ \cite{ai_da_fablet}, replaces explicit variational optimization with a learned surrogate. A parametric neural network $f_\theta$ is trained to approximate the analysis functional $\Phi$---the mapping from observations $y$, background information $(\bar{x}, B)$, and observation statistics $(h, R)$ to the MAP state estimate $x^a$ that minimizes the 3D-Var cost. While training with re-analysis data is a common option, this study instead investigates self-supervised training: the network learns by minimizing the variational cost directly, without access to ground truth or re-analysis labels. The true state $x_{\text{true}}$, available here due to the nature of the simulation study, is used only for offline evaluation and never during training.
 
+\noindent
 A critical challenge in this problem setting is that the true state is unobservable in operational applications, requiring the network to learn from the combination of both sources of information---observations and background forecasts---rather than from supervised labels. This pilot study systematically investigates how different neural architectures approximate the analysis functional within a sequential adaptation of the AI-Var framework, testing the hypothesis that temporal sequence modeling may enhance stability and coherence in chaotic, partially observed systems. The investigation is conducted via a controlled simulation study on the Lorenz-63 system, which provides ground truth trajectories for rigorous evaluation.
 
 \subsection{Notation and Definitions}
 \label{sec:notation}
 
+\noindent
 Before proceeding, we establish notation used throughout this manuscript. Let $x \in \mathbb{R}^3$ denote the state vector of the Lorenz-63 system with components $(x_1, x_2, x_3)$. At each time step $t$, we have:
 
 \begin{table}[H]
@@ -385,6 +390,7 @@ Each model-regime pair is trained independently for every combination of observa
 \subsection{Evaluation Metrics}
 \label{sec:metrics}
 
+\noindent
 The primary quantitative metric is the root mean square error (RMSE) between the network output and true state:
 \begin{equation}
 \text{RMSE} = \sqrt{\frac{1}{N}\sum_{i=1}^{N} \|\hat{x}^a_i - x^{\text{true}}_i\|^2},
@@ -392,6 +398,15 @@ The primary quantitative metric is the root mean square error (RMSE) between the
 \end{equation}
 computed over all three state components and averaged across test trajectories ($K = 500$ trajectories $\times$ $S = 3$ noise realizations per trajectory $= 1500$ samples).
 
+\noindent
+When distributions exhibit heavy tails due to catastrophic failures such as attractor escape, we additionally report the \emph{Root Median Squared Error} (RMdSE):
+\begin{equation}
+\text{RMdSE} = \sqrt{\text{median}_{i} \|\hat{x}^a_i - x^{\text{true}}_i\|^2},
+\label{eq:rmdse}
+\end{equation}
+which provides a robust alternative to RMSE that is less sensitive to outliers. RMdSE characterizes typical performance even when a small fraction of runs diverge catastrophically. Boxplot visualizations employ logarithmic y-axes to better reveal the distribution structure when outliers span multiple orders of magnitude.
+
+\noindent
 Two improvement metrics contextualize RMSE gains:
 
 \paragraph{Improvement relative to background (primary).}
@@ -406,23 +421,27 @@ where $\text{RMSE}_b$ is the background error (before assimilation) and $\text{R
 \text{Improvement}_{\text{FM}}(\%) = 100 \cdot \left(1 - \frac{\text{RMSE}_{\text{model}}}{\text{RMSE}_{\text{FixedMean}}}\right).
 \end{equation}
 
+\noindent
 For geometric fidelity assessment, we employ the \emph{normalized Hausdorff distance}:
 \begin{equation}
 \tilde{H}_{\text{global}} = \frac{H(\mathcal{A}_{\text{analysis}}, \mathcal{A}_{\text{truth}})}{\text{diam}(\mathcal{A}_{\text{truth, global}})},
 \end{equation}
 where $H$ is the symmetric Hausdorff distance and the denominator is a fixed reference diameter computed from long truth trajectories. This metric quantifies geometric alignment between analysis and truth manifolds.
 
+\noindent
 Additionally, \emph{lobe occupancy discrepancy} measures global topology preservation:
 \begin{equation}
 \Delta_{\text{lobe}} = \left| \frac{n_{\text{left}}^{\text{analysis}}}{N} - \frac{n_{\text{left}}^{\text{truth}}}{N} \right|,
 \end{equation}
 where $n_{\text{left}}$ counts time steps in the left lobe ($x_1 < 0$). Low $\Delta_{\text{lobe}}$ indicates correct separatrix crossing behavior and balanced wing visitation.
 
+\noindent
 We report mean $\pm$ standard deviation for normally distributed quantities and median with interquartile range (IQR) for quantities affected by outliers (e.g., when attractor escape occurs). A run is classified as diverged if post-assimilation RMSE exceeds $10\times$ the median for that configuration or if $\tilde{H}_{\text{global}} > 10$.
 
 \subsection{Reproducibility}
 \label{sec:reproducibility}
 
+\noindent
 All experiments were executed from the code repository referenced on the title page. Each run archives the full configuration, RNG seed, and Git commit hash. Python and PyTorch versions are recorded in the repository's \texttt{environment.yml}. A utility \texttt{set\_seed(seed)} initializes Python, NumPy, and PyTorch RNGs; deterministic CUDA flags are set where available. Minimal reproduction of main figures is possible from stored metrics files without retraining.
 
 \newpage
@@ -438,6 +457,7 @@ This section presents experimental findings organized by increasing specificity:
 \subsection{Convergence and Training Dynamics}
 \label{sec:convergence}
 
+\noindent
 The convergence behavior across training regimes reveals substantial differences in stability and learning efficiency. Figure~\ref{fig:convergence_envelopes} shows mean loss trajectories across all configurations.
 
 \begin{figure}[H]
@@ -447,8 +467,10 @@ The convergence behavior across training regimes reveals substantial differences
 \label{fig:convergence_envelopes}
 \end{figure}
 
+\noindent
 The Baseline regime (no background information) exhibits steady but slow convergence, with validation losses consistently higher than training losses, indicating limited generalization capacity when prior information is absent. The FixedMean regime shows faster initial convergence due to the fixed prior anchor, achieving lower training loss within the first few epochs. However, this apparent stability is deceptive: at moderate to high noise levels ($\sigma_{\text{obs}} \geq 0.5$), FixedMean frequently produces catastrophic failures during evaluation, including attractor escape and RMSE values exceeding $10\times$ the baseline.
 
+\noindent
 The Resample regime demonstrates both rapid and stable convergence. By introducing stochastic variability in the background mean and covariance at each epoch, the model learns a more generalizable correction functional that remains stable across noise levels. Validation losses track training losses closely, and the narrow variance envelope indicates reproducible optimization dynamics.
 
 \paragraph{Divergence Rates.} At $\sigma_{\text{obs}} \geq 0.5$, observed divergence rates are approximately 70--80\% for FixedMean and only 20--25\% for Resample. When summarizing results, we report mean $\pm$ standard deviation over non-diverged runs and state divergence rates explicitly.
@@ -456,17 +478,20 @@ The Resample regime demonstrates both rapid and stable convergence. By introduci
 \subsection{Resample Regime: Accuracy and Stability}
 \label{sec:resample_accuracy}
 
+\noindent
 Having established that the Resample regime provides the most stable training dynamics, we evaluate its post-assimilation performance in detail.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{4_3a_resample_rmse_distributions.png}
-\caption{Post-assimilation RMSE distributions for MLP, GRU, and LSTM across noise levels in the Resample regime ($xy$ mode). Box plots show median, interquartile range, and outliers. All models maintain stable accuracy for $\sigma_{\text{obs}} \leq 0.1$ (median RMSE $\approx 4$--5), with dispersion increasing at higher noise.}
+\caption{Post-assimilation RMSE distributions for MLP, GRU, and LSTM across noise levels in the Resample regime ($xy$ mode). Box plots show median, interquartile range, and outliers on a logarithmic scale. All models maintain stable accuracy for $\sigma_{\text{obs}} \leq 0.1$ (median RMSE $\approx 4$--5), with dispersion increasing at higher noise.}
 \label{fig:resample_rmse}
 \end{figure}
 
+\noindent
 Figure~\ref{fig:resample_rmse} illustrates RMSE distributions for the three primary architectures. At low noise ($\sigma_{\text{obs}} \leq 0.1$), all models achieve median RMSE values of approximately 4--5, with narrow interquartile ranges indicating consistent performance. As noise increases, RMSE dispersion widens, particularly for LSTM, whose quartile range nearly doubles at $\sigma_{\text{obs}} = 1.0$.
 
+\noindent
 Table~\ref{tab:resample_stats} provides detailed statistics. The GRU exhibits tighter distributions and fewer outliers than LSTM, suggesting more stable behavior under data perturbation. The MLP achieves the lowest mean RMSE in some configurations, though differences between architectures are modest and often within uncertainty bounds. These results do not conclusively establish architectural superiority; rather, they suggest that all three approaches are viable for this low-dimensional problem.
 
 \begin{table}[H]
@@ -494,6 +519,7 @@ $xy$  & GRU  & 7.788 & 1.150 & $-0.660$ & 0.960 \\
 \subsection{Observation Mode Sensitivity}
 \label{sec:obs_sensitivity}
 
+\noindent
 The structure of the observation operator substantially affects reconstruction accuracy. Figure~\ref{fig:obs_mode_rmse} reveals a clear hierarchy:
 \[
 \text{RMSE}(xy) < \text{RMSE}(x) < \text{RMSE}(x^2).
@@ -502,10 +528,11 @@ The structure of the observation operator substantially affects reconstruction a
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{4_4a_post_assimilation_rmse.png}
-\caption{Post-assimilation RMSE distributions for all observation modes as a function of noise level $\sigma_{\text{obs}}$, aggregated across architectures. The $xy$ mode achieves the lowest and most stable errors (median RMSE $\approx 4$), followed by $x$ ($\approx 4$--5), while $x^2$ exhibits markedly higher dispersion and error magnitudes ($\approx 5$--10) due to nonlinear noise amplification.}
+\caption{Post-assimilation RMSE distributions for all observation modes as a function of noise level $\sigma_{\text{obs}}$, aggregated across architectures. The $xy$ mode achieves the lowest and most stable errors (median RMSE $\approx 4$), followed by $x$ ($\approx 4$--5), while $x^2$ exhibits markedly higher dispersion and error magnitudes ($\approx 5$--10) due to nonlinear noise amplification. Note: logarithmic y-axis recommended for visualizing outlier structure.}
 \label{fig:obs_mode_rmse}
 \end{figure}
 
+\noindent
 The $xy$ mode provides dual observations that strongly constrain the state, yielding median RMSE near 4 with narrow quartiles even at $\sigma_{\text{obs}} = 1.0$. The $x$ mode, observing only a single component, achieves slightly higher but still stable errors. The $x^2$ mode exhibits significantly larger dispersion and RMSE values rising from approximately 5 to 10 as noise increases.
 
 \begin{figure}[H]
@@ -515,11 +542,13 @@ The $xy$ mode provides dual observations that strongly constrain the state, yiel
 \label{fig:obs_mode_delta}
 \end{figure}
 
+\noindent
 The pattern confirms that information coupling outweighs observational complexity: coupled linear observations ($xy$) provide redundancy that resolves ambiguities and filters noise more effectively than increased measurement sophistication. The nonlinear $x^2$ mode suffers from multiplicative error amplification: additive observation noise translates into multiplicative state uncertainty through the squared transformation.
 
 \subsection{Temporal Dynamics and Attractor Geometry}
 \label{sec:temporal}
 
+\noindent
 Effective data assimilation in chaotic systems requires temporal coherence and fidelity to the underlying attractor manifold. Figure~\ref{fig:error_evolution} shows temporal error evolution across regimes.
 
 \begin{figure}[H]
@@ -529,6 +558,7 @@ Effective data assimilation in chaotic systems requires temporal coherence and f
 \label{fig:error_evolution}
 \end{figure}
 
+\noindent
 The Resample regime achieves rapid error reduction within approximately 50 time steps (roughly half a Lyapunov time), stabilizing at a low steady-state level. The error trajectory remains smooth and bounded, indicating that the learned correction functional successfully tracks the chaotic manifold. In contrast, FixedMean exhibits erratic behavior at moderate to high noise, with error oscillations growing in amplitude and trajectories frequently diverging from the true attractor.
 
 \paragraph{Attractor Geometry.} Global-normalized Hausdorff distances quantify geometric fidelity across regimes.
@@ -540,6 +570,7 @@ The Resample regime achieves rapid error reduction within approximately 50 time 
 \label{fig:global_hausdorff}
 \end{figure}
 
+\noindent
 Resample maintains $\tilde{H}_{\text{global}} \approx 0.32$ across all noise levels---approximately $4.7\times$ lower than FixedMean. The flat response to increasing noise confirms that dynamic background updates provide a noise-tolerant geometric anchor.
 
 \paragraph{Lobe Occupancy.} The lobe occupancy discrepancy $\Delta_{\text{lobe}}$ validates global topology preservation.
@@ -551,6 +582,7 @@ Resample maintains $\tilde{H}_{\text{global}} \approx 0.32$ across all noise lev
 \label{fig:lobe_discrepancy}
 \end{figure}
 
+\noindent
 Resample achieves near-zero lobe occupancy discrepancy ($\Delta_{\text{lobe}} < 0.02$) across all observation modes and noise levels, confirming that dynamic background updates enable correct separatrix crossing and balanced wing visitation. FixedMean exhibits substantial lobe imbalances at higher noise, with approximately 15\% of trajectories incorrectly accumulating in one lobe at $\sigma_{\text{obs}} = 0.50$ under the $x$ mode.
 
 \begin{table}[H]
@@ -621,32 +653,40 @@ $B$ Accuracy & $\pm 10\%$ of true scale & Critical for variational minimization 
 \section{Discussion}
 \label{sec:discussion}
 
+\noindent
 This study investigated neural network architectures for data assimilation in the Lorenz-63 system, focusing on how temporal modeling and ensemble-based strategies affect reconstruction of chaotic trajectories. The findings provide preliminary evidence supporting several hypotheses while leaving key questions unresolved.
 
 \subsection{Architectural Comparisons: Inconclusive Evidence}
 
+\noindent
 The comparison between feed-forward and recurrent architectures yielded mixed results. Under the Resample regime, GRU and LSTM models generally achieved lower RMSE than the MLP, particularly in the $xy$ observation mode where temporal coupling between state components provides exploitable structure. However, the differences were often modest---typically 5--15\% in relative RMSE---and varied with noise level and observation mode. In some configurations, the MLP matched or exceeded recurrent performance, particularly for the $x$ mode at low noise.
 
+\noindent
 These results do not conclusively establish that temporal context is necessary or sufficient for improved assimilation in this setting. The Lorenz-63 system's low dimensionality may limit the benefit of sequence modeling: with only three state variables and dense observations, the instantaneous information content may be sufficient for accurate reconstruction. The hypothesis that recurrent architectures provide meaningful advantages may require testing in higher-dimensional systems where temporal correlations carry more information.
 
 \subsection{The Importance of Stochastic Regularization}
 
+\noindent
 The clearest finding concerns background conditioning strategy. The Resample regime substantially outperformed FixedMean across nearly all metrics: lower mean RMSE, narrower variance, lower divergence rates, and better geometric fidelity. The improvement was most pronounced at moderate to high noise levels ($\sigma_{\text{obs}} \geq 0.5$), where FixedMean exhibited 70--80\% failure rates compared to 20--25\% for Resample.
 
+\noindent
 This pattern suggests that stochastic background resampling provides a form of implicit regularization that prevents the network from overfitting to a single prior realization. By exposing the model to diverse background configurations during training, Resample forces the learned functional to generalize across the distribution of possible priors, rather than memorizing corrections specific to a fixed background. This interpretation aligns with general principles of dropout and data augmentation in deep learning, applied here at the level of the data assimilation inputs.
 
 \subsection{Failure Modes and Their Implications}
 
+\noindent
 Two primary failure modes were observed:
 
 \paragraph{Attractor Escape.} Under FixedMean at high noise, analysis trajectories frequently departed from the chaotic attractor, drifting toward fixed points or exhibiting non-chaotic dynamics. This failure manifests as dramatically elevated RMSE (often $>100$) and large Hausdorff distances. The static background mean appears insufficient to anchor the learned functional when observation noise overwhelms the signal; without stochastic updates, the network cannot adapt to diverse realizations of chaotic dynamics.
 
 \paragraph{Lobe Imbalance.} Even when trajectories remained bounded, FixedMean often produced lobe occupancy discrepancies indicating preferential accumulation in one wing of the attractor. This suggests that the learned functional fails to correctly model separatrix crossings, producing trajectories that qualitatively differ from truth despite maintaining finite RMSE.
 
+\noindent
 Both failure modes underscore the importance of geometric fidelity metrics beyond aggregate RMSE. A model achieving moderate RMSE may nonetheless fail to reproduce essential dynamical features of the chaotic system.
 
 \subsection{Limitations and Caveats}
 
+\noindent
 Several limitations temper the conclusions of this study.
 
 \paragraph{Low Dimensionality.} The Lorenz-63 system has only three state variables, far below the $10^6$--$10^9$ dimensions of operational weather and ocean models. Architectural choices that show no advantage in this toy setting might prove critical in high-dimensional applications where sparsity, localization, and temporal structure become essential.
@@ -665,6 +705,7 @@ Several limitations temper the conclusions of this study.
 \section{Outlook}
 \label{sec:outlook}
 
+\noindent
 This pilot study opens several directions for future investigation.
 
 \paragraph{Extension to Higher-Dimensional Systems.} The Lorenz-96 model \cite{lorenz_1963} provides a natural next testbed, with configurable dimension (typically 40 state variables) and tunable chaoticity. This setting would reveal whether architectural advantages emerge at higher dimension and test scalability of the training procedure. Extension to simplified atmospheric or oceanic models would further assess operational relevance.

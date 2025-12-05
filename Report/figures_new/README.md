@@ -19,6 +19,8 @@ To regenerate a specific figure:
 python3 generate_figures.py rmse_comparison
 python3 generate_figures.py trajectory_sample
 python3 generate_figures.py attractor_projection
+python3 generate_figures.py rmse_boxplot_logscale
+python3 generate_figures.py robust_metrics
 ```
 
 ## Available Figures
@@ -28,6 +30,8 @@ python3 generate_figures.py attractor_projection
 | `rmse_comparison_new.png` | RMSE comparison across noise levels and observation modes |
 | `trajectory_sample_new.png` | Sample trajectory reconstruction showing truth vs analysis |
 | `attractor_projection_new.png` | Phase-space projections of the attractor |
+| `rmse_boxplot_logscale.png` | RMSE boxplot with logarithmic y-scale (addresses Hans comment #105) |
+| `rmse_vs_rmdse_comparison.png` | Comparison of RMSE vs RMdSE (Root Median Squared Error) for robust outlier handling |
 
 ## Data Sources
 
@@ -42,6 +46,12 @@ Result files follow the naming convention:
 Where:
 - `mode` ∈ {x, xy, x2}
 - `noise` ∈ {0.05, 0.1, 0.5, 1.0}
+
+## Robust Metrics
+
+The script includes computation of both RMSE and RMdSE (Root Median Squared Error):
+- **RMSE**: Standard metric, sensitive to outliers from catastrophic failures
+- **RMdSE**: Robust alternative using median instead of mean, better characterizes typical performance when a small fraction of runs diverge
 
 ## Note
 

@@ -12,6 +12,7 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 | 71 | "why switch between phi and f?" | Section 1.1 (Notation table) | Added explicit explanation: "Φ is the analysis functional (theoretical optimal mapping); f_θ is its neural network approximation" |
 | 93 | "make very clear how phi and f_theta relate" | Section 1.1 | Created dedicated notation subsection with table explaining the distinction |
 | 94 | "much earlier" (B and R definitions) | Section 1.1 | Moved B and R definitions to notation section at start of paper |
+| 105 | "can you make it a log plot?" | Section 3.5 (Metrics), figures_new/ | Added RMdSE (Root Median Squared Error) as robust alternative; added log-scale boxplot generation script; updated figure captions to recommend logarithmic y-axis |
 
 ## Medium Priority Comments
 
@@ -35,6 +36,14 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 | 75 | "90% improvement refers to RMSE_a is 1/10 of RMSE_b" | Section 3.5 | Added: "note that 90% improvement corresponds to RMSE_a being one-tenth of RMSE_b" |
 | 92 | "doesnt every observation need noise?" | Section 3.1 | Clarified: "All observations are corrupted by additive Gaussian noise" |
 | 97 | "x^2 provides the least amount info" | Section 2.5 | Added: "The operators are ordered by information content: xy provides the most... x^2 provides the least" |
+
+## Meeting Discussion Items (Added)
+
+| Item | Resolution Location | Description |
+|------|---------------------|-------------|
+| Log-scale boxplots | Section 3.5, figures_new/generate_figures.py | Added `generate_rmse_boxplot_logscale()` function to create boxplots with logarithmic y-axis for better visualization of outliers |
+| RMdSE (robust metric) | Section 3.5 (Metrics) | Added Root Median Squared Error definition and discussion as robust alternative to RMSE when distributions have heavy tails due to catastrophic failures |
+| Paragraph formatting | Throughout document | Added `\noindent` formatting for proper paragraph alignment |
 
 ## Low Priority Comments (Editorial)
 
