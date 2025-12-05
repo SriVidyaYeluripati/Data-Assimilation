@@ -2,6 +2,23 @@
 
 This document maps each of Hans's feedback comments to the specific paragraphs/sections that were rewritten to address them in the academic revision.
 
+## Line-by-Line Mapping to Original main (3).tex
+
+The following table maps Hans's PDF annotations (page 4 comments) to the exact lines in the original `main (3).tex`:
+
+| Hans Comment | Original Line(s) | Original Text | Resolution in main_rewritten.tex |
+|-------------|------------------|---------------|----------------------------------|
+| "Swap, ENKF has gaussian approx, 3D Var has iterative optimization" | Line 74 | "depend on linear-Gaussian assumptions and costly iterative optimization" | Line 76: "3D-Var require iterative minimization...EnKF employ Gaussian approximations" |
+| "whats phi?" | Line 74 | "learns $\Phi$" without definition | Lines 76, 111-130: Φ defined as "analysis functional—the mapping from observations and background to MAP estimate" + Notation table |
+| "Make this crucial, the method does not use re-analysis" | Line 74 | "(no analysis labels)" - not emphasized | Line 76: "Crucially, no ground truth or re-analysis data are used during training" |
+| "Do you refer to AI-Var from the paper?" | Line 74, 93 | "AI-Based Data Assimilation (AI-DA)" | Lines 76, 105-106: "the AI-Var framework introduced by Fablet et al." with citation |
+| "new paragraph" | Line 77 | Paragraph structure | Restructured with proper paragraph breaks |
+| "You dont quite replicate the AI-Var paper" | Line 77 | "replicates and evaluates" | Line 78: Changed to "pilot study investigates adaptations" |
+| "investigating state estimation crucial for forecasting" | Line 85 | "State estimation...is a fundamental challenge" | Line 92-93: Added "crucial for accurate forecasting" |
+| "in the type of problem investigated here" | Line 93 | Context unclear | Line 102-103: "in this problem setting" clarified |
+| "the employed background mean" | Line 80 | "background priors" | Line 80: Changed to "employed background mean" |
+| "Performance is evaluated via the test RMSE..." | Line 80 | RMSE evaluation sentence | Lines 80-81: Restructured evaluation description |
+
 ## High Priority Comments
 
 | ID | Comment | Resolution Location | Description |
@@ -12,7 +29,7 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 | 71 | "why switch between phi and f?" | Section 1.1 (Notation table) | Added explicit explanation: "Φ is the analysis functional (theoretical optimal mapping); f_θ is its neural network approximation" |
 | 93 | "make very clear how phi and f_theta relate" | Section 1.1 | Created dedicated notation subsection with table explaining the distinction |
 | 94 | "much earlier" (B and R definitions) | Section 1.1 | Moved B and R definitions to notation section at start of paper |
-| 105 | "can you make it a log plot?" | Section 3.5 (Metrics), figures_new/ | Added RMdSE (Root Median Squared Error) as robust alternative; added log-scale boxplot generation script; updated figure captions to recommend logarithmic y-axis |
+| 105 | "can you make it a log plot?" | Section 3.5 (Metrics), figures_new/ | Added RMdSE (Root Median Squared Error) as robust alternative; added log-scale boxplot generation script (`rmse_boxplot_logscale.png`); updated figure captions |
 
 ## Medium Priority Comments
 
@@ -41,9 +58,10 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 
 | Item | Resolution Location | Description |
 |------|---------------------|-------------|
-| Log-scale boxplots | Section 3.5, figures_new/generate_figures.py | Added `generate_rmse_boxplot_logscale()` function to create boxplots with logarithmic y-axis for better visualization of outliers |
-| RMdSE (robust metric) | Section 3.5 (Metrics) | Added Root Median Squared Error definition and discussion as robust alternative to RMSE when distributions have heavy tails due to catastrophic failures |
+| Log-scale boxplots | Section 3.5, figures_new/generate_figures.py | Added `generate_rmse_boxplot_logscale()` function to create boxplots with logarithmic y-axis for better visualization of outliers. Output: `rmse_boxplot_logscale.png` |
+| RMdSE (robust metric) | Section 3.5 (Metrics) | Added Root Median Squared Error definition and discussion as robust alternative to RMSE when distributions have heavy tails due to catastrophic failures. Output: `rmse_vs_rmdse_comparison.png` |
 | Paragraph formatting | Throughout document | Added `\noindent` formatting for proper paragraph alignment |
+| Attractor visualization | figures_new/ | Regenerated `attractor_projection_new.png` with full trajectory data (100,000 points) showing proper Lorenz butterfly pattern |
 
 ## Low Priority Comments (Editorial)
 
@@ -78,7 +96,6 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 | 85 | "This needs closer specification" | Please specify what needs more detail |
 | 88 | "I dont quite understand this" (page 23) | Complex passage rewritten for clarity |
 | 99 | "why is that?" | Context provided where possible |
-| 105 | "can you make it a log plot?" | Figure regeneration noted; log-scale version would require new script |
 | 107 | "something is wrong here" | Please specify the error |
 | 109 | "we need to discuss this" | Flagged for discussion |
 | 111, 112, 113, 114 | Figure caption details | Mode/noise/model specifications added where applicable |
@@ -96,6 +113,16 @@ This document maps each of Hans's feedback comments to the specific paragraphs/s
 8. **Pilot study framing** - not overselling contributions
 9. **Clear transitions** between sections and paragraphs
 10. **Consistent mathematical notation** throughout
+
+## New Figures Generated
+
+| Figure | Description | Addresses |
+|--------|-------------|-----------|
+| `attractor_projection_new.png` | Full Lorenz attractor with 100,000 data points showing butterfly pattern | Visualization quality |
+| `trajectory_sample_new.png` | State reconstruction showing Truth vs Analysis vs Background | Data clarity |
+| `rmse_comparison_new.png` | RMSE across noise levels | Standard metric |
+| `rmse_boxplot_logscale.png` | Log-scale boxplot for outlier visualization | Hans comment #105 |
+| `rmse_vs_rmdse_comparison.png` | RMSE vs RMdSE comparison | Meeting discussion on robust metrics |
 
 ## Appendix Status
 

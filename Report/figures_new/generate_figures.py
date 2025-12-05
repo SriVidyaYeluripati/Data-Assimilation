@@ -188,110 +188,141 @@ def generate_rmse_comparison():
 
 def generate_trajectory_sample():
     """
-    Generate sample trajectory comparison.
+    Generate sample trajectory comparison showing truth vs analysis reconstruction.
+    
+    Uses resample regime data for better visualization of assimilation quality.
     
     Output: figures_new/trajectory_sample_new.png
     """
+    # Try to load resample regime data first (has architecture labels)
+    resample_dir = REPO_ROOT / "results" / "resample " / "run_20251008_134240 " / "diagnostics"
+    
     mode = 'xy'
     noise = 0.1
+    arch = 'gru'  # Best performing architecture
     
     try:
-        truth, analysis, background = load_baseline_results(mode, noise)
+        truth_path = resample_dir / f"truth_{mode}_{arch}_n{noise}.npy"
+        analysis_path = resample_dir / f"analysis_{mode}_{arch}_n{noise}.npy"
+        background_path = resample_dir / f"background_{mode}_{arch}_n{noise}.npy"
+        
+        if truth_path.exists():
+            truth = np.load(truth_path)
+            analysis = np.load(analysis_path)
+            background = np.load(background_path)
+            print(f"Loaded resample regime data: truth shape={truth.shape}")
+        else:
+            raise FileNotFoundError("Resample data not found")
     except FileNotFoundError:
-        print(f"Results not found for mode={mode}, noise={noise}")
-        return
+        # Fall back to baseline
+        try:
+            truth, analysis, background = load_baseline_results(mode, noise)
+            print(f"Using baseline data: truth shape={truth.shape}")
+        except FileNotFoundError:
+            print(f"No data found for mode={mode}, noise={noise}")
+            return
     
-    fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(12, 9), sharex=True)
     
-    # Plot first 100 time steps of first trajectory
-    T = min(100, truth.shape[1] if len(truth.shape) > 1 else truth.shape[0])
-    
-    # Reshape if needed
+    # Determine number of time steps to plot
     if len(truth.shape) == 2:
+        T = min(100, truth.shape[0])
         truth_plot = truth[:T, :]
         analysis_plot = analysis[:T, :]
         background_plot = background[:T, :]
     else:
+        T = min(100, truth.shape[0])
         truth_plot = truth.reshape(-1, 3)[:T, :]
         analysis_plot = analysis.reshape(-1, 3)[:T, :]
         background_plot = background.reshape(-1, 3)[:T, :]
     
     labels = [r'$x_1$', r'$x_2$', r'$x_3$']
+    colors = {'Truth': 'black', 'Analysis': 'blue', 'Background': 'red'}
     
     for i in range(3):
-        axes[i].plot(truth_plot[:, i], 'k-', label='Truth', linewidth=1.5)
-        axes[i].plot(analysis_plot[:, i], 'b--', label='Analysis', linewidth=1.2)
-        axes[i].plot(background_plot[:, i], 'r:', label='Background', linewidth=1.0, alpha=0.7)
-        axes[i].set_ylabel(labels[i])
+        axes[i].plot(truth_plot[:, i], 'k-', label='Truth', linewidth=2.0)
+        axes[i].plot(analysis_plot[:, i], 'b--', label='Analysis', linewidth=1.5)
+        axes[i].plot(background_plot[:, i], 'r:', label='Background', linewidth=1.2, alpha=0.7)
+        axes[i].set_ylabel(labels[i], fontsize=12)
         axes[i].grid(True, alpha=0.3)
+        axes[i].tick_params(labelsize=10)
         if i == 0:
-            axes[i].legend(loc='upper right', ncol=3)
+            axes[i].legend(loc='upper right', ncol=3, fontsize=10)
     
-    axes[-1].set_xlabel('Time step')
-    fig.suptitle(f'Trajectory Reconstruction (mode={mode}, $\\sigma_{{\\mathrm{{obs}}}}$={noise})', y=1.02)
+    axes[-1].set_xlabel('Time step', fontsize=12)
+    fig.suptitle(f'State Reconstruction: Truth vs Analysis (mode={mode}, $\\sigma_{{obs}}$={noise}, {arch.upper()})', 
+                 y=1.01, fontsize=13)
     plt.tight_layout()
     
     output_path = FIGURES_NEW_DIR / "trajectory_sample_new.png"
-    plt.savefig(output_path)
+    plt.savefig(output_path, dpi=300)
     plt.close()
     print(f"Saved: {output_path}")
 
 
 def generate_attractor_projection():
     """
-    Generate attractor phase-space projections.
+    Generate attractor phase-space projections using full trajectory data.
+    
+    This function loads the raw trajectory data to generate a proper visualization
+    of the Lorenz attractor with sufficient data points for a clear butterfly pattern.
     
     Output: figures_new/attractor_projection_new.png
     """
-    mode = 'xy'
-    noise = 0.1
+    # Use raw trajectory data for better visualization
+    raw_data_path = REPO_ROOT / "data " / "raw" / "test_traj.npy"
     
     try:
-        truth, analysis, background = load_baseline_results(mode, noise)
+        # Load full trajectory data (500 trajectories x 200 timesteps x 3 dims)
+        trajectories = np.load(raw_data_path)
+        print(f"Loaded trajectory data: shape={trajectories.shape}")
+        
+        # Flatten to get all points
+        truth_flat = trajectories.reshape(-1, 3)
+        print(f"Flattened shape: {truth_flat.shape}")
+        
     except FileNotFoundError:
-        print(f"Results not found for mode={mode}, noise={noise}")
-        return
-    
-    # Reshape if needed
-    if len(truth.shape) == 3:
-        truth_flat = truth.reshape(-1, 3)
-        analysis_flat = analysis.reshape(-1, 3)
-    elif len(truth.shape) == 2 and truth.shape[1] == 3:
-        truth_flat = truth
-        analysis_flat = analysis
-    else:
-        print(f"Unexpected array shape: truth.shape={truth.shape}")
-        print("Expected either:")
-        print("  - 3D array with shape (n_trajectories, n_timesteps, 3)")
-        print("  - 2D array with shape (n_samples, 3)")
-        print("Check that the .npy files contain properly formatted state vectors.")
-        return
+        print(f"Raw trajectory data not found at {raw_data_path}")
+        # Fall back to baseline results
+        mode = 'xy'
+        noise = 0.1
+        try:
+            truth, analysis, background = load_baseline_results(mode, noise)
+            if len(truth.shape) == 3:
+                truth_flat = truth.reshape(-1, 3)
+            else:
+                truth_flat = truth
+        except FileNotFoundError:
+            print("No data available for attractor projection")
+            return
     
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
     
-    # X-Y projection
-    axes[0].plot(truth_flat[::10, 0], truth_flat[::10, 1], 'k.', alpha=0.3, markersize=1, label='Truth')
-    axes[0].plot(analysis_flat[::10, 0], analysis_flat[::10, 1], 'b.', alpha=0.3, markersize=1, label='Analysis')
-    axes[0].set_xlabel(r'$x_1$')
-    axes[0].set_ylabel(r'$x_2$')
-    axes[0].set_title('X-Y Projection')
-    axes[0].legend()
-    axes[0].grid(True, alpha=0.3)
+    # Use every 2nd point for better density visualization
+    step = max(1, len(truth_flat) // 50000)  # Limit to ~50k points for clarity
     
-    # X-Z projection
-    axes[1].plot(truth_flat[::10, 0], truth_flat[::10, 2], 'k.', alpha=0.3, markersize=1, label='Truth')
-    axes[1].plot(analysis_flat[::10, 0], analysis_flat[::10, 2], 'b.', alpha=0.3, markersize=1, label='Analysis')
-    axes[1].set_xlabel(r'$x_1$')
-    axes[1].set_ylabel(r'$x_3$')
-    axes[1].set_title('X-Z Projection')
-    axes[1].legend()
+    # X-Y projection (classic Lorenz butterfly view)
+    axes[0].scatter(truth_flat[::step, 0], truth_flat[::step, 1], 
+                   c='darkblue', s=0.5, alpha=0.4, label='Trajectory')
+    axes[0].set_xlabel(r'$x_1$', fontsize=12)
+    axes[0].set_ylabel(r'$x_2$', fontsize=12)
+    axes[0].set_title('X-Y Projection (Top View)', fontsize=11)
+    axes[0].grid(True, alpha=0.3)
+    axes[0].set_aspect('equal', adjustable='datalim')
+    
+    # X-Z projection (classic butterfly side view)
+    axes[1].scatter(truth_flat[::step, 0], truth_flat[::step, 2], 
+                   c='darkgreen', s=0.5, alpha=0.4, label='Trajectory')
+    axes[1].set_xlabel(r'$x_1$', fontsize=12)
+    axes[1].set_ylabel(r'$x_3$', fontsize=12)
+    axes[1].set_title('X-Z Projection (Butterfly View)', fontsize=11)
     axes[1].grid(True, alpha=0.3)
     
-    fig.suptitle(f'Attractor Geometry (mode={mode}, $\\sigma_{{\\mathrm{{obs}}}}$={noise})', y=1.02)
+    fig.suptitle('Lorenz-63 Attractor Geometry (Test Trajectories)', y=1.02, fontsize=13)
     plt.tight_layout()
     
     output_path = FIGURES_NEW_DIR / "attractor_projection_new.png"
-    plt.savefig(output_path)
+    plt.savefig(output_path, dpi=300)
     plt.close()
     print(f"Saved: {output_path}")
 
